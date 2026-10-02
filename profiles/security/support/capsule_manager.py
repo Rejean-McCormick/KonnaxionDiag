@@ -265,6 +265,11 @@ def remote_probe_script(cfg: dict[str, Any]) -> str:
         "capsule_manager.runtime_env_remote_path_template",
         iid,
     )
+    gate_sig_path = _safe_remote_template(
+        cm.get("security_gate_signature_remote_path_template", "/opt/konnaxion/instances/{instance_id}/state/security-gate.sig"),
+        "capsule_manager.security_gate_signature_remote_path_template",
+        iid,
+    )
     token_path = _safe_remote_path(
         cm.get("agent_token_path", "/opt/konnaxion/manager/agent.token"),
         "capsule_manager.agent_token_path",
@@ -283,6 +288,7 @@ def remote_probe_script(cfg: dict[str, Any]) -> str:
 
     q_gate = shlex.quote(gate_path)
     q_env = shlex.quote(env_path)
+    q_gate_sig = shlex.quote(gate_sig_path)
     q_token = shlex.quote(token_path)
     q_audit = shlex.quote(audit_path)
     q_service = shlex.quote(service)
@@ -308,5 +314,11 @@ if [ -r {q_gate} ]; then
   cat -- {q_gate}
 else
   echo '{{"status":"UNKNOWN","reason":"security-gate evidence file missing"}}'
+fi
+echo "__KX_SECURITY_GATE_SIGNATURE__"
+if [ -r {q_gate_sig} ]; then
+  cat -- {q_gate_sig}
+else
+  echo '{{"status":"MISSING"}}'
 fi
 """

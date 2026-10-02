@@ -9,7 +9,7 @@ MANIFEST=ROOT/'kdiag_manifest.json'
 
 class App(tk.Tk):
     def __init__(self):
-        super().__init__();self.title('KonnaxionDiag v4');self.geometry('1040x700');self.proc=None;self.q=queue.Queue()
+        super().__init__();self.title('KonnaxionDiag v4.2');self.geometry('1040x700');self.proc=None;self.q=queue.Queue()
         m=json.loads(MANIFEST.read_text(encoding='utf-8'));self.campaigns=m.get('campaigns',{})
         top=ttk.Frame(self,padding=10);top.pack(fill='x')
         ttk.Label(top,text='Campaign').pack(side='left')

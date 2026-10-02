@@ -1,0 +1,30 @@
+{
+  "schema": "konnaxion.capsule-security-gate.v1",
+  "status": "PASS",
+  "issued_at": "2026-10-02T14:00:00Z",
+  "expires_at": "2026-10-02T14:15:00Z",
+  "subject": {
+    "instance_id": "instance-123",
+    "manifest_digest": "sha256:<manifest-digest>",
+    "image_digests": [
+      "sha256:<application-image-digest>"
+    ]
+  },
+  "checks": {
+    "capsule_signature": "PASS",
+    "image_checksums": "PASS",
+    "manifest_schema": "PASS",
+    "secrets_present": "PASS",
+    "secrets_not_default": "PASS",
+    "firewall_enabled": "PASS",
+    "dangerous_ports_blocked": "PASS",
+    "postgres_not_public": "PASS",
+    "redis_not_public": "PASS",
+    "docker_socket_not_mounted": "PASS",
+    "no_privileged_containers": "PASS",
+    "no_host_network": "PASS",
+    "allowed_images_only": "PASS",
+    "admin_surface_private": "PASS",
+    "backup_configured": "PASS"
+  }
+}

@@ -1,11 +1,31 @@
 {
-  "schema": "securitydiag.restore-attestation.v1",
-  "performed_at": "YYYY-MM-DDTHH:MM:SSZ",
-  "operator": "",
-  "isolated_target": true,
-  "database_restored": false,
-  "application_booted": false,
-  "critical_data_verified": false,
-  "offsite_copy_verified": false,
-  "notes": ""
+  "schema": "konnaxiondiag.attestation.v1",
+  "issuer": "recovery-operator",
+  "subject": {
+    "release_set_digest": "sha256:REPLACE_WITH_RELEASE_SET_DIGEST",
+    "backup_digest": "sha256:REPLACE_WITH_BACKUP_DIGEST",
+    "restore_target_identity": "isolated-restore-host-or-cluster-id",
+    "environment_id": "recovery-test",
+    "trust_epoch_before": "epoch-before",
+    "trust_epoch_after": "epoch-after",
+    "revocation_epoch": "revocation-epoch",
+    "audit_anchor": "sha256:REPLACE_WITH_AUDIT_ANCHOR"
+  },
+  "evidence_type": "recovery.restore-drill",
+  "status": "PASS",
+  "issued_at": "2026-10-02T15:00:00+00:00",
+  "expires_at": "2026-11-01T15:00:00+00:00",
+  "policy_digest": "sha256:REPLACE_WITH_POLICY_DIGEST",
+  "evidence_digest": "sha256:REPLACE_WITH_RESTORE_RECEIPT_DIGEST",
+  "nonce": "replace-with-unique-nonce-at-least-16-chars",
+  "statement": {
+    "operator": "recovery-operator-identity",
+    "started_at": "2026-10-02T14:00:00+00:00",
+    "completed_at": "2026-10-02T14:30:00+00:00",
+    "isolated_target": true,
+    "database_restored": true,
+    "application_booted": true,
+    "critical_data_verified": true,
+    "offsite_copy_verified": true
+  }
 }

@@ -1,0 +1,488 @@
+{
+  "schema": "konnaxiondiag.security-contract-registry.v1",
+  "description": "Senior Security Codex assurance contracts. External controls require signed subject-bound attestations; KonnaxionDiag never treats documentation as evidence.",
+  "contracts": [
+    {
+      "id": "SEC-01",
+      "name": "Separate Identity Planes",
+      "primary_failure_prevented": "A principal is not a single string",
+      "ecosystem_locus": "Konfid / IdP / service boundaries",
+      "verification": "external_attestation",
+      "authority_group": "identity",
+      "evidence_type": "security.contract.SEC-01"
+    },
+    {
+      "id": "SEC-02",
+      "name": "Workload Identity by Trust Domain",
+      "primary_failure_prevented": "Long-lived service secrets are an implementation shortcut, not an identity architecture",
+      "ecosystem_locus": "Konfid / IdP / service boundaries",
+      "verification": "external_attestation",
+      "authority_group": "identity",
+      "evidence_type": "security.contract.SEC-02"
+    },
+    {
+      "id": "SEC-03",
+      "name": "Sender-Constrained Credentials",
+      "primary_failure_prevented": "Bearer tokens convert theft into authority: whoever possesses the token can use it until expiry",
+      "ecosystem_locus": "Konfid / IdP / service boundaries",
+      "verification": "external_attestation",
+      "authority_group": "identity",
+      "evidence_type": "security.contract.SEC-03"
+    },
+    {
+      "id": "SEC-04",
+      "name": "Explicit Delegation and Actor Chains",
+      "primary_failure_prevented": "Delegation is not impersonation by convention",
+      "ecosystem_locus": "Konfid / IdP / service boundaries",
+      "verification": "external_attestation",
+      "authority_group": "identity",
+      "evidence_type": "security.contract.SEC-04"
+    },
+    {
+      "id": "SEC-05",
+      "name": "Step-Up and Transaction Authorization",
+      "primary_failure_prevented": "Authentication strength is contextual",
+      "ecosystem_locus": "Konfid / IdP / service boundaries",
+      "verification": "external_attestation",
+      "authority_group": "identity",
+      "evidence_type": "security.contract.SEC-05"
+    },
+    {
+      "id": "SEC-06",
+      "name": "Receiver-Side Authority Is Final",
+      "primary_failure_prevented": "A sender may carry claims, evidence and requested authority, but the receiving trust domain owns the final decision",
+      "ecosystem_locus": "Konfid / Policy Runtime / Node Agent",
+      "verification": "external_attestation",
+      "authority_group": "authorization",
+      "evidence_type": "security.contract.SEC-06"
+    },
+    {
+      "id": "SEC-07",
+      "name": "Policy Decision / Enforcement Separation",
+      "primary_failure_prevented": "Centralizing policy semantics can reduce drift, but centralizing execution authority creates a crown jewel",
+      "ecosystem_locus": "Konfid / Policy Runtime / Node Agent",
+      "verification": "external_attestation",
+      "authority_group": "authorization",
+      "evidence_type": "security.contract.SEC-07"
+    },
+    {
+      "id": "SEC-08",
+      "name": "Capability-Shaped Privileged Execution",
+      "primary_failure_prevented": "The safest privileged executor is deliberately weak: it exposes a small vocabulary of typed, allowlisted operations instead of shell, SQL, Kubernetes-admin, or arbitrary HTTP",
+      "ecosystem_locus": "Konfid / Policy Runtime / Node Agent",
+      "verification": "external_attestation",
+      "authority_group": "authorization",
+      "evidence_type": "security.contract.SEC-08"
+    },
+    {
+      "id": "SEC-09",
+      "name": "Confused Deputy Defense",
+      "primary_failure_prevented": "A powerful service can be tricked into spending its own authority for a weaker caller",
+      "ecosystem_locus": "Konfid / Policy Runtime / Node Agent",
+      "verification": "external_attestation",
+      "authority_group": "authorization",
+      "evidence_type": "security.contract.SEC-09"
+    },
+    {
+      "id": "SEC-10",
+      "name": "Authorization at Object, Property, and Function",
+      "primary_failure_prevented": "“Endpoint requires auth” is not meaningful protection if a caller can select another tenant's object, write protected fields, or invoke an admin function through the same API model",
+      "ecosystem_locus": "Konfid / Policy Runtime / Node Agent",
+      "verification": "external_attestation",
+      "authority_group": "authorization",
+      "evidence_type": "security.contract.SEC-10"
+    },
+    {
+      "id": "SEC-11",
+      "name": "Quorum and Separation of Duties",
+      "primary_failure_prevented": "For high-impact actions, least privilege is insufficient if one compromised identity can both request, approve and execute",
+      "ecosystem_locus": "Konfid / Policy Runtime / Node Agent",
+      "verification": "external_attestation",
+      "authority_group": "authorization",
+      "evidence_type": "security.contract.SEC-11"
+    },
+    {
+      "id": "SEC-12",
+      "name": "Policy as a Versioned Security Artifact",
+      "primary_failure_prevented": "Policy changes are production code changes with potentially larger blast radius than application code",
+      "ecosystem_locus": "Konfid / Policy Runtime / Node Agent",
+      "verification": "external_attestation",
+      "authority_group": "authorization",
+      "evidence_type": "security.contract.SEC-12"
+    },
+    {
+      "id": "SEC-13",
+      "name": "Canonical Semantic Fingerprints",
+      "primary_failure_prevented": "Distributed systems need to know whether two requests are the “same” semantically, not merely byte-identical",
+      "ecosystem_locus": "IK / adapters / multi-tenant services",
+      "verification": "external_attestation",
+      "authority_group": "protocol_boundaries",
+      "evidence_type": "security.contract.SEC-13"
+    },
+    {
+      "id": "SEC-14",
+      "name": "Idempotency Is Not Replay Protection",
+      "primary_failure_prevented": "Idempotency prevents duplicate effects for a known semantic operation; replay protection prevents an attacker from reusing captured authority",
+      "ecosystem_locus": "IK / adapters / multi-tenant services",
+      "verification": "external_attestation",
+      "authority_group": "protocol_boundaries",
+      "evidence_type": "security.contract.SEC-14"
+    },
+    {
+      "id": "SEC-15",
+      "name": "Transport Does Not Transfer Authority",
+      "primary_failure_prevented": "Message buses, API gateways, signed envelopes and internal networks transport claims; they do not create business authority",
+      "ecosystem_locus": "IK / adapters / multi-tenant services",
+      "verification": "external_attestation",
+      "authority_group": "protocol_boundaries",
+      "evidence_type": "security.contract.SEC-15"
+    },
+    {
+      "id": "SEC-16",
+      "name": "Schema Validity Is Not Semantic Safety",
+      "primary_failure_prevented": "A perfectly schema-valid request can still be malicious, unauthorized, stale, contradictory or dangerous",
+      "ecosystem_locus": "IK / adapters / multi-tenant services",
+      "verification": "external_attestation",
+      "authority_group": "protocol_boundaries",
+      "evidence_type": "security.contract.SEC-16"
+    },
+    {
+      "id": "SEC-17",
+      "name": "Egress Is a Privilege, Not Plumbing",
+      "primary_failure_prevented": "A service with broad outbound network access can turn SSRF, prompt injection, dependency compromise or credential theft into lateral movement and exfiltration",
+      "ecosystem_locus": "IK / adapters / multi-tenant services",
+      "verification": "external_attestation",
+      "authority_group": "protocol_boundaries",
+      "evidence_type": "security.contract.SEC-17"
+    },
+    {
+      "id": "SEC-18",
+      "name": "Tenant Isolation Is End-to-End",
+      "primary_failure_prevented": "Multi-tenancy fails when only the database query is tenant-scoped but caches, queues, metrics, object stores, rate limits, audit streams or background workers are not",
+      "ecosystem_locus": "IK / adapters / multi-tenant services",
+      "verification": "external_attestation",
+      "authority_group": "protocol_boundaries",
+      "evidence_type": "security.contract.SEC-18"
+    },
+    {
+      "id": "SEC-19",
+      "name": "Unknown Outcome Is a First-Class State",
+      "primary_failure_prevented": "Distributed side effects have an uncomfortable state: the caller timed out after sending, so the effect may or may not have happened",
+      "ecosystem_locus": "IK / adapters / multi-tenant services",
+      "verification": "external_attestation",
+      "authority_group": "protocol_boundaries",
+      "evidence_type": "security.contract.SEC-19"
+    },
+    {
+      "id": "SEC-20",
+      "name": "Key Hierarchy with Purpose Separation",
+      "primary_failure_prevented": "A flat set of “signing keys” becomes unmanageable during compromise",
+      "ecosystem_locus": "kOA trust / KMS / signers",
+      "verification": "external_attestation",
+      "authority_group": "cryptography",
+      "evidence_type": "security.contract.SEC-20"
+    },
+    {
+      "id": "SEC-21",
+      "name": "Short-Lived Credentials and Secret Zero",
+      "primary_failure_prevented": "Secret managers reduce sprawl but do not solve the “secret zero” problem if workloads still need a long-lived bootstrap credential to access them",
+      "ecosystem_locus": "kOA trust / KMS / signers",
+      "verification": "external_attestation",
+      "authority_group": "cryptography",
+      "evidence_type": "security.contract.SEC-21"
+    },
+    {
+      "id": "SEC-22",
+      "name": "Rotation and Revocation Are Protocols",
+      "primary_failure_prevented": "Generating a new key is easy; changing trust safely across distributed verifiers is the hard part",
+      "ecosystem_locus": "kOA trust / KMS / signers",
+      "verification": "external_attestation",
+      "authority_group": "cryptography",
+      "evidence_type": "security.contract.SEC-22"
+    },
+    {
+      "id": "SEC-23",
+      "name": "Cryptographic Domain Separation and Agility",
+      "primary_failure_prevented": "Crypto failures often come from using the right primitive in the wrong domain: same key, same hash preimage, or same signature semantics across unrelated purposes",
+      "ecosystem_locus": "kOA trust / KMS / signers",
+      "verification": "external_attestation",
+      "authority_group": "cryptography",
+      "evidence_type": "security.contract.SEC-23"
+    },
+    {
+      "id": "SEC-24",
+      "name": "Envelope Encryption and Key Scope",
+      "primary_failure_prevented": "“Encrypted at rest” is too coarse",
+      "ecosystem_locus": "kOA trust / KMS / signers",
+      "verification": "external_attestation",
+      "authority_group": "cryptography",
+      "evidence_type": "security.contract.SEC-24"
+    },
+    {
+      "id": "SEC-25",
+      "name": "Cryptographic Use Is Auditable",
+      "primary_failure_prevented": "A key can remain secret while still being abused by an authorized but compromised signer",
+      "ecosystem_locus": "kOA trust / KMS / signers",
+      "verification": "external_attestation",
+      "authority_group": "cryptography",
+      "evidence_type": "security.contract.SEC-25"
+    },
+    {
+      "id": "SEC-26",
+      "name": "Source Change Path Is Part of the TCB",
+      "primary_failure_prevented": "Artifact signing cannot rescue a malicious source change that legitimately passed through the build",
+      "ecosystem_locus": "GitHub / CI / kOA release admission",
+      "verification": "external_attestation",
+      "authority_group": "supply_chain",
+      "evidence_type": "security.contract.SEC-26"
+    },
+    {
+      "id": "SEC-27",
+      "name": "Provenance, Not Just SBOM",
+      "primary_failure_prevented": "An SBOM says what components are present; provenance says how an artifact was built, from what source and by which builder",
+      "ecosystem_locus": "GitHub / CI / kOA release admission",
+      "verification": "external_attestation",
+      "authority_group": "supply_chain",
+      "evidence_type": "security.contract.SEC-27"
+    },
+    {
+      "id": "SEC-28",
+      "name": "Keyless Signing and Transparency",
+      "primary_failure_prevented": "Long-lived CI signing keys become high-value secrets exposed to workflow compromise",
+      "ecosystem_locus": "GitHub / CI / kOA release admission",
+      "verification": "external_attestation",
+      "authority_group": "supply_chain",
+      "evidence_type": "security.contract.SEC-28"
+    },
+    {
+      "id": "SEC-29",
+      "name": "Admission by Digest and Attestation",
+      "primary_failure_prevented": "Scanning in CI is advisory if the runtime can deploy something else",
+      "ecosystem_locus": "GitHub / CI / kOA release admission",
+      "verification": "native",
+      "native_validator": "release_admission_by_digest_and_attestation",
+      "authority_group": "supply_chain",
+      "evidence_type": "security.contract.SEC-29"
+    },
+    {
+      "id": "SEC-30",
+      "name": "Dependency Closure and Hermeticity",
+      "primary_failure_prevented": "Pinning top-level dependencies does not pin the build if resolvers can choose transitive versions, mutable indexes, build backends or system packages at build time",
+      "ecosystem_locus": "GitHub / CI / kOA release admission",
+      "verification": "external_attestation",
+      "authority_group": "supply_chain",
+      "evidence_type": "security.contract.SEC-30"
+    },
+    {
+      "id": "SEC-31",
+      "name": "CI Isolation and Ephemeral Authority",
+      "primary_failure_prevented": "CI executes attacker-influenced code by design",
+      "ecosystem_locus": "GitHub / CI / kOA release admission",
+      "verification": "external_attestation",
+      "authority_group": "supply_chain",
+      "evidence_type": "security.contract.SEC-31"
+    },
+    {
+      "id": "SEC-32",
+      "name": "Security Delta Release Gates",
+      "primary_failure_prevented": "A generic test suite treats all changes equally, but security risk is highly non-uniform",
+      "ecosystem_locus": "GitHub / CI / kOA release admission",
+      "verification": "external_attestation",
+      "authority_group": "supply_chain",
+      "evidence_type": "security.contract.SEC-32"
+    },
+    {
+      "id": "SEC-33",
+      "name": "Release Set as a Security Object",
+      "primary_failure_prevented": "In a multi-repository ecosystem, secure components can combine into an insecure release",
+      "ecosystem_locus": "GitHub / CI / kOA release admission",
+      "verification": "native",
+      "native_validator": "release_set_subject_binding",
+      "authority_group": "supply_chain",
+      "evidence_type": "security.contract.SEC-33"
+    },
+    {
+      "id": "SEC-34",
+      "name": "No Ambient Kubernetes Authority",
+      "primary_failure_prevented": "Pods frequently inherit cluster authority they never use",
+      "ecosystem_locus": "Kubernetes / kOA runtime",
+      "verification": "external_attestation",
+      "authority_group": "kubernetes_runtime",
+      "evidence_type": "security.contract.SEC-34"
+    },
+    {
+      "id": "SEC-35",
+      "name": "Restricted Runtime Profile as Admission Policy",
+      "primary_failure_prevented": "Container hardening in YAML is brittle unless the platform rejects workloads that violate it",
+      "ecosystem_locus": "Kubernetes / kOA runtime",
+      "verification": "external_attestation",
+      "authority_group": "kubernetes_runtime",
+      "evidence_type": "security.contract.SEC-35"
+    },
+    {
+      "id": "SEC-36",
+      "name": "Network Policy Is Not Identity",
+      "primary_failure_prevented": "IP/namespace segmentation limits reachability but does not prove who a peer is",
+      "ecosystem_locus": "Kubernetes / kOA runtime",
+      "verification": "external_attestation",
+      "authority_group": "kubernetes_runtime",
+      "evidence_type": "security.contract.SEC-36"
+    },
+    {
+      "id": "SEC-37",
+      "name": "Security Plane Resource Isolation",
+      "primary_failure_prevented": "Security controls can fail open indirectly when telemetry, analytics or untrusted workloads exhaust the CPU, DB pool, queues or threads needed for authorization, revocation and incident response",
+      "ecosystem_locus": "Kubernetes / kOA runtime",
+      "verification": "external_attestation",
+      "authority_group": "kubernetes_runtime",
+      "evidence_type": "security.contract.SEC-37"
+    },
+    {
+      "id": "SEC-38",
+      "name": "Runtime Drift Is a Security Signal",
+      "primary_failure_prevented": "Even with immutable deployments, emergency edits, compromised nodes or side-loaded files can make runtime differ from the admitted artifact",
+      "ecosystem_locus": "Kubernetes / kOA runtime",
+      "verification": "external_attestation",
+      "authority_group": "kubernetes_runtime",
+      "evidence_type": "security.contract.SEC-38"
+    },
+    {
+      "id": "SEC-39",
+      "name": "Sandbox the Dangerous Boundary, Not Everything",
+      "primary_failure_prevented": "Uniform sandboxing wastes cost; no sandboxing gives high-risk interpreters and plugins the same kernel/network privileges as ordinary services",
+      "ecosystem_locus": "Kubernetes / kOA runtime",
+      "verification": "external_attestation",
+      "authority_group": "kubernetes_runtime",
+      "evidence_type": "security.contract.SEC-39"
+    },
+    {
+      "id": "SEC-40",
+      "name": "Logs Are Not Authoritative Evidence",
+      "primary_failure_prevented": "Application logs optimize diagnosis; authoritative security evidence must survive compromise, retries, clock quirks and operator mistakes",
+      "ecosystem_locus": "Audit Broker / Orgo / recovery",
+      "verification": "external_attestation",
+      "authority_group": "audit_recovery",
+      "evidence_type": "security.contract.SEC-40"
+    },
+    {
+      "id": "SEC-41",
+      "name": "Tamper Evidence Needs an Independent Anchor",
+      "primary_failure_prevented": "Hash chaining makes modification detectable only if an attacker cannot rewrite the entire chain and its head",
+      "ecosystem_locus": "Audit Broker / Orgo / recovery",
+      "verification": "external_attestation",
+      "authority_group": "audit_recovery",
+      "evidence_type": "security.contract.SEC-41"
+    },
+    {
+      "id": "SEC-42",
+      "name": "Fail Closed by Transition, Not by Slogan",
+      "primary_failure_prevented": "“Fail closed” applied indiscriminately can turn a dependency outage into a self-inflicted platform outage; “fail open” hides security bypasses",
+      "ecosystem_locus": "Audit Broker / Orgo / recovery",
+      "verification": "external_attestation",
+      "authority_group": "audit_recovery",
+      "evidence_type": "security.contract.SEC-42"
+    },
+    {
+      "id": "SEC-43",
+      "name": "Compromise-Ready Recovery",
+      "primary_failure_prevented": "Disaster recovery restores availability; security recovery restores trustworthy authority",
+      "ecosystem_locus": "Audit Broker / Orgo / recovery",
+      "verification": "native",
+      "native_validator": "compromise_ready_restore",
+      "authority_group": "audit_recovery",
+      "evidence_type": "security.contract.SEC-43"
+    },
+    {
+      "id": "SEC-44",
+      "name": "Security Chaos and Adversarial Rehearsal",
+      "primary_failure_prevented": "Security architecture remains theoretical until failure modes are exercised under realistic partial failure: stale keys, duplicate delivery, policy outage, forged approvals, corrupted artifacts and overloaded control planes",
+      "ecosystem_locus": "Audit Broker / Orgo / recovery",
+      "verification": "external_attestation",
+      "authority_group": "audit_recovery",
+      "evidence_type": "security.contract.SEC-44"
+    },
+    {
+      "id": "SEC-45",
+      "name": "Measure Invariants, Not Vulnerability Counts",
+      "primary_failure_prevented": "Vulnerability counts are noisy and easy to game",
+      "ecosystem_locus": "Audit Broker / Orgo / recovery",
+      "verification": "external_attestation",
+      "authority_group": "audit_recovery",
+      "evidence_type": "security.contract.SEC-45"
+    },
+    {
+      "id": "SEC-46",
+      "name": "The Model Is an Untrusted Planner",
+      "primary_failure_prevented": "Once an AI can call tools, the primary trust boundary is no longer “prompt vs model”; it is “probabilistic planner vs deterministic authority”",
+      "ecosystem_locus": "SenTient / AI tools / Konfid gates",
+      "verification": "external_attestation",
+      "authority_group": "agentic_ai",
+      "evidence_type": "security.contract.SEC-46"
+    },
+    {
+      "id": "SEC-47",
+      "name": "Least Agency and Tool Capability Firebreak",
+      "primary_failure_prevented": "Least privilege for agents must include least agency: even a correctly authorized agent should not have more autonomous action latitude than the task requires",
+      "ecosystem_locus": "SenTient / AI tools / Konfid gates",
+      "verification": "external_attestation",
+      "authority_group": "agentic_ai",
+      "evidence_type": "security.contract.SEC-47"
+    },
+    {
+      "id": "SEC-48",
+      "name": "Prompt/Context Taint and Provenance",
+      "primary_failure_prevented": "Indirect prompt injection works because untrusted content is interpreted in the same semantic channel as trusted instructions",
+      "ecosystem_locus": "SenTient / AI tools / Konfid gates",
+      "verification": "external_attestation",
+      "authority_group": "agentic_ai",
+      "evidence_type": "security.contract.SEC-48"
+    },
+    {
+      "id": "SEC-49",
+      "name": "Agent Identity Is Not Human Identity",
+      "primary_failure_prevented": "An agent acting for a user is neither the user nor merely the hosting service",
+      "ecosystem_locus": "SenTient / AI tools / Konfid gates",
+      "verification": "external_attestation",
+      "authority_group": "agentic_ai",
+      "evidence_type": "security.contract.SEC-49"
+    },
+    {
+      "id": "SEC-50",
+      "name": "Agent Memory Is Security State",
+      "primary_failure_prevented": "Persistent memory can carry attacker instructions or corrupted facts across sessions, turning one injection into durable behavior change",
+      "ecosystem_locus": "SenTient / AI tools / Konfid gates",
+      "verification": "external_attestation",
+      "authority_group": "agentic_ai",
+      "evidence_type": "security.contract.SEC-50"
+    },
+    {
+      "id": "SEC-51",
+      "name": "Human Approval Is a Security Protocol",
+      "primary_failure_prevented": "Human-in-the-loop is not automatically safe",
+      "ecosystem_locus": "SenTient / AI tools / Konfid gates",
+      "verification": "external_attestation",
+      "authority_group": "agentic_ai",
+      "evidence_type": "security.contract.SEC-51"
+    },
+    {
+      "id": "SEC-52",
+      "name": "Agentic Supply Chain and Tool Trust",
+      "primary_failure_prevented": "Agents dynamically combine models, prompts, MCP/tool servers, plugins, retrieval sources and code packages",
+      "ecosystem_locus": "SenTient / AI tools / Konfid gates",
+      "verification": "external_attestation",
+      "authority_group": "agentic_ai",
+      "evidence_type": "security.contract.SEC-52"
+    },
+    {
+      "id": "SEC-53",
+      "name": "Agentic Budgets and Circuit Breakers",
+      "primary_failure_prevented": "Autonomous loops turn small mistakes into cascading failures: repeated tool calls, recursive delegation, repeated purchases/deletes, token burn or fan-out across services",
+      "ecosystem_locus": "SenTient / AI tools / Konfid gates",
+      "verification": "external_attestation",
+      "authority_group": "agentic_ai",
+      "evidence_type": "security.contract.SEC-53"
+    }
+  ],
+  "attestation_schema": "konnaxiondiag.attestation.v1",
+  "subject": "release_set_digest"
+}

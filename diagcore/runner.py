@@ -80,7 +80,9 @@ def run_campaign(selection:str,*,levels=None,config:AppConfig|None=None,target_o
     exec_cfg=cfg.get('execution',{}) if isinstance(cfg.get('execution',{}),dict) else {}
     ignore=tuple(dict.fromkeys([*DEFAULT_IGNORE,*exec_cfg.get('protect_tracked_ignore_paths',[])]))
     restore=tuple(dict.fromkeys([*DEFAULT_RESTORE,*exec_cfg.get('protect_tracked_restore_paths',[])]))
-    protect=bool(exec_cfg.get('protect_tracked_files',True));before=_git_status(target,(*ignore,*restore)) if protect else None
+    mutation_forbidden=not bool(exec_cfg.get('allow_target_mutation',False))
+    protect=bool(exec_cfg.get('protect_tracked_files',True)) or mutation_forbidden
+    before=_git_status(target,(*ignore,*restore)) if protect else None
     restore_state=_snapshot_paths(target,restore) if protect else {}
     if current.exists():shutil.rmtree(current,ignore_errors=True)
     session_dir=control/'konnaxion'
@@ -118,12 +120,12 @@ def run_campaign(selection:str,*,levels=None,config:AppConfig|None=None,target_o
     restored=_restore_paths(target,restore_state) if protect else []
     after=_git_status(target,(*ignore,*restore)) if protect else None;protection=None
     if before is not None and after is not None and before!=after:
-        protection={'verdict':'ERROR','message':'Tracked target state changed during diagnostics.','before':before,'after':after,'restored_paths':restored}
+        protection={'verdict':'ERROR','message':'Tracked target state changed during diagnostics; execution.allow_target_mutation=false makes this release-blocking.','before':before,'after':after,'restored_paths':restored,'allow_target_mutation':not mutation_forbidden}
     ordered=[results[x['id']] for x in selected];required={x['id']:bool(x.get('required',False)) for x in selected}
     raw_verdict=campaign_verdict(ordered,required);correlation=build_cross_domain(ordered);write_json(current/'correlation.json',correlation)
     final=None
     if bool(campaign_meta.get('final_release_gate',False)):
-        final=build_final_release_verdict(campaign=selection,run_id=run_id,target_root=target,results=ordered,cfg=cfg.data,correlation=correlation,out_dir=current)
+        final=build_final_release_verdict(campaign=selection,run_id=run_id,target_root=target,results=ordered,cfg=cfg.data,correlation=correlation,out_dir=current,target_protection=protection)
     verdict=final.get('verdict') if final else raw_verdict
     if protection:verdict='ERROR'
     counts={}

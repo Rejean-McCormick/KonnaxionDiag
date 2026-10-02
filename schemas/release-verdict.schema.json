@@ -1,14 +1,19 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "konnaxiondiag.release-verdict.v4",
+  "$id": "konnaxiondiag.release-verdict.v5",
   "type": "object",
-  "required": ["schema", "campaign", "run_id", "verdict", "functional", "security", "signature"],
+  "required": ["schema", "campaign", "run_id", "verdict", "authorization", "release_set", "functional", "security", "signature", "subject_binding", "target_protection", "consumer_contract"],
   "properties": {
-    "schema": {"const": "konnaxiondiag.release-verdict.v4"},
+    "schema": {"const": "konnaxiondiag.release-verdict.v5"},
     "verdict": {"enum": ["PASS", "WARN", "BLOCKED", "ERROR"]},
+    "authorization": {"type": "object"},
+    "release_set": {"type": "object"},
     "functional": {"type": "object"},
     "security": {"type": "object"},
-    "signature": {"type": "object"}
+    "signature": {"type": "object"},
+    "subject_binding": {"type": "object"},
+    "target_protection": {"type": "object"},
+    "consumer_contract": {"type": "object"}
   },
   "additionalProperties": true
 }

@@ -2,15 +2,117 @@
   "schema": "konnaxiondiag.config.v4",
   "target_repo_root": "auto",
   "release_gate": {
-    "security_warn_dispositions": {
-      "example.finding.id": {
-        "status": "accepted",
-        "rationale": "Documented temporary risk acceptance."
-      }
-    },
+    "security_warn_dispositions": {},
     "signing": {
       "required": true,
       "private_key_file": ""
+    },
+    "disposition_policy": {
+      "require_metadata": true,
+      "require_expiry": true,
+      "require_subject_binding": true,
+      "require_signature": true,
+      "trusted_public_keys": [
+        "/secure/kdiag-risk-approval-public.pem"
+      ],
+      "require_schema": true,
+      "require_finding_binding": true,
+      "require_policy_version": true,
+      "require_requester_separation": true,
+      "min_approvals": 1
+    },
+    "authorization": {
+      "policy_version": "konnaxion-security-policy-v1",
+      "ttl_seconds": 3600
+    }
+  },
+  "capsule_manager": {
+    "enabled": true,
+    "instance_id": "instance-123",
+    "security_gate_trusted_public_keys": [
+      "/secure/capsule-gate-public.pem"
+    ]
+  },
+  "recovery": {
+    "restore_attestation_trusted_public_keys": [
+      "/secure/recovery-attestation-public.pem"
+    ],
+    "allow_legacy_restore_attestation": false
+  },
+  "security_assurance": {
+    "enabled": true,
+    "required_contracts": "all",
+    "trusted_public_keys": [
+      "/secure/ecosystem-assurance-public.pem"
+    ],
+    "trusted_public_keys_by_contract": {
+      "SEC-01": [
+        "/secure/konfid-assurance-public.pem"
+      ],
+      "SEC-20": [
+        "/secure/kms-assurance-public.pem"
+      ],
+      "SEC-46": [
+        "/secure/sentient-assurance-public.pem"
+      ]
+    },
+    "trusted_issuers_by_contract": {
+      "SEC-01": [
+        "konfid-assurance"
+      ],
+      "SEC-20": [
+        "kms-assurance"
+      ],
+      "SEC-46": [
+        "sentient-assurance"
+      ]
+    },
+    "trusted_public_keys_by_authority_group": {
+      "identity": [
+        "/secure/konfid-assurance-public.pem"
+      ],
+      "authorization": [
+        "/secure/policy-assurance-public.pem"
+      ],
+      "protocol_boundaries": [
+        "/secure/ik-assurance-public.pem"
+      ],
+      "cryptography": [
+        "/secure/kms-assurance-public.pem"
+      ],
+      "supply_chain": [
+        "/secure/ci-assurance-public.pem"
+      ],
+      "kubernetes_runtime": [
+        "/secure/platform-assurance-public.pem"
+      ],
+      "audit_recovery": [
+        "/secure/audit-recovery-assurance-public.pem"
+      ],
+      "agentic_ai": [
+        "/secure/sentient-assurance-public.pem"
+      ]
+    },
+    "allow_global_trust_fallback": false,
+    "accept_legacy_attestations": false
+  },
+  "release_set": {
+    "components": {
+      "runtime_pack": [
+        "path/to/runtime-pack.json"
+      ],
+      "policy_bundle": [
+        "path/to/policy-bundle.json"
+      ],
+      "infra_manifest": [
+        "path/to/infra-manifest.json"
+      ],
+      "sbom": [
+        "path/to/sbom.spdx.json"
+      ],
+      "provenance": [
+        "path/to/provenance.json"
+      ]
     }
   }
 }

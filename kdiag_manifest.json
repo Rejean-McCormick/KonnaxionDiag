@@ -1,9 +1,9 @@
 {
   "schema": "konnaxiondiag.manifest.v4",
   "standard": "KonnaxionDiag",
-  "standard_version": "4.0.0",
+  "standard_version": "4.2.0",
   "suite_name": "KonnaxionDiag",
-  "suite_version": "4.0.0",
+  "suite_version": "4.2.0",
   "control_dir_default": ".konnaxiondiag",
   "levels": [
     {

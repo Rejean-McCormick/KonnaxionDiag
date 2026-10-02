@@ -69,7 +69,7 @@ class LevelResult:
         data = {
             "schema": REPORT_SCHEMA,
             "standard": "KonnaxionDiag",
-            "standard_version": "4.0.0",
+            "standard_version": "4.2.0",
             "profile": profile,
             "run_id": run_id,
             "level_id": self.level,

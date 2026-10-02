@@ -125,7 +125,11 @@ def run(cfg,report):
                "GitHub Actions references are not pinned to full commit SHAs." if workflow_findings else "No unpinned GitHub Actions references found in the bounded scan.",
                evidence=workflow_findings[:100] if workflow_findings else None,
                recommendation="For release-sensitive workflows, pin third-party actions to reviewed commit SHAs." if workflow_findings else None)
-    image_findings=[]
+    mutable_images=[]
+    weakly_pinned_images=[]
+    supply_cfg=cfg.get("supply_chain",{}) if isinstance(cfg.get("supply_chain",{}),dict) else {}
+    require_digests=bool(supply_cfg.get("require_immutable_image_digests",False))
+    local_prefixes=tuple(str(x) for x in supply_cfg.get("local_image_prefixes",[]))
     for p,rel in iter_files(root,cfg,max_files=10000):
         if p.name in {"Dockerfile","docker-compose.yml","docker-compose.yaml","docker-compose.production.yml","docker-compose.production.yaml"} or "compose" in p.name.lower():
             text=bounded_text(p,512*1024)
@@ -146,18 +150,32 @@ def run(cfg,report):
                         if len(parts)>=4 and parts[-2].upper()=="AS":
                             aliases.add(parts[-1])
                 elif re.match(r"^\s*image:\s*",line):
-                    value=s.split(":",1)[1].strip().strip("'\\\"")
+                    value=s.split(":",1)[1].strip().strip("'\"")
                 if not value:
                     continue
-                trusted_prefixes=[str(x) for x in cfg.get("remote",{}).get("docker",{}).get("allowed_image_prefixes",[])]
-                if any(value.startswith(prefix) for prefix in trusted_prefixes):
+                # Locally-built release images cannot be digest-pinned in source; they are
+                # instead bound by the signed Capsule Manager subject/image_digests.
+                if local_prefixes and any(value.startswith(prefix) for prefix in local_prefixes):
                     continue
-                if ":latest" in value or ("@" not in value and ":" not in value):
-                    image_findings.append({"path":rel,"line":i,"declaration":s[:180]})
-    report.add("supply_chain.container_images.pinning","WARN" if image_findings else "PASS","supply_chain",
-               "Some external container images use `latest` or no explicit version." if image_findings else "No obvious `latest` or unversioned external container image found.",
-               evidence=image_findings[:100] if image_findings else None,
-               recommendation="Use explicit reviewed versions; use immutable digests where release assurance requires it." if image_findings else None)
+                record={"path":rel,"line":i,"image":value,"declaration":s[:220]}
+                if value.startswith("${") or value.startswith("$"):
+                    mutable_images.append({**record,"reason":"image reference is variable and cannot be proven immutable statically"})
+                elif "@sha256:" not in value:
+                    if require_digests:
+                        mutable_images.append({**record,"reason":"release dependency is not pinned by sha256 digest"})
+                    elif ":latest" in value or ("@" not in value and ":" not in value):
+                        weakly_pinned_images.append(record)
+    if require_digests:
+        report.add("supply_chain.container_images.immutable","FAIL" if mutable_images else "PASS","supply_chain",
+                   "One or more non-local release images are mutable or unresolved." if mutable_images else "All statically declared non-local release images are pinned by immutable sha256 digests.",
+                   evidence=mutable_images[:100] if mutable_images else None,
+                   recommendation="Pin external/base images as registry/repository@sha256:<digest>; bind locally-built image digests in the signed Capsule Manager release subject." if mutable_images else None,
+                   release_blocker=bool(mutable_images))
+    else:
+        report.add("supply_chain.container_images.pinning","WARN" if weakly_pinned_images else "PASS","supply_chain",
+                   "Some external container images use `latest` or no explicit version." if weakly_pinned_images else "No obvious `latest` or unversioned external container image found.",
+                   evidence=weakly_pinned_images[:100] if weakly_pinned_images else None,
+                   recommendation="Prefer immutable sha256 digests for release-sensitive images." if weakly_pinned_images else None)
 
     audits=cfg.get("supply_chain",{}).get("declared_audits",[])
     if not audits:

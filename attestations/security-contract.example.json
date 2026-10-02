@@ -1,0 +1,18 @@
+{
+  "schema": "konnaxiondiag.attestation.v1",
+  "issuer": "konfid-assurance",
+  "subject": {
+    "release_set_digest": "sha256:REPLACE_WITH_RELEASE_SET_DIGEST"
+  },
+  "evidence_type": "security.contract.SEC-01",
+  "status": "PASS",
+  "issued_at": "2026-10-02T15:00:00+00:00",
+  "expires_at": "2026-10-02T16:00:00+00:00",
+  "policy_digest": "sha256:REPLACE_WITH_POLICY_DIGEST",
+  "evidence_digest": "sha256:REPLACE_WITH_EVIDENCE_DIGEST",
+  "nonce": "replace-with-unique-nonce-at-least-16-chars",
+  "statement": {
+    "contract_id": "SEC-01",
+    "summary": "Machine-verifiable evidence statement emitted by the owning authority."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "konnaxiondiag.detached-signature.v1",
+  "type": "object",
+  "required": ["schema", "purpose", "algorithm", "payload_sha256", "signature_base64", "public_key_fingerprint_sha256"],
+  "properties": {
+    "schema": {"const": "konnaxiondiag.detached-signature.v1"},
+    "purpose": {"type": "string", "minLength": 1},
+    "algorithm": {"const": "ed25519"},
+    "payload_sha256": {"pattern": "^[0-9a-fA-F]{64}$"},
+    "signature_base64": {"type": "string", "minLength": 1},
+    "public_key_fingerprint_sha256": {"pattern": "^[0-9a-fA-F]{64}$"}
+  },
+  "additionalProperties": true
+}

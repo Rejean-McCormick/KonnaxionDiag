@@ -5,6 +5,8 @@ from pathlib import Path
 from diagcore.manifest import load_manifest
 from diagcore.utils import read_json
 from diagcore.release_gate import disposition_valid
+from assurance.release_set import build_release_set
+from diagcore.contracts import evaluate_security_contracts
 
 RELEASE_ACCEPTABLE = {"PASS"}
 VALID_RELEASE_PROFILES = {"standard_release", "incident_recovery"}
@@ -16,19 +18,29 @@ def _warn_dispositions(cfg) -> dict:
     value = gate.get("security_warn_dispositions", release.get("warn_dispositions", {}))
     return value if isinstance(value, dict) else {}
 
-def _unresolved_warns(result: dict, cfg) -> list[str]:
+def _unresolved_warns(result: dict, cfg, *, release_set_digest: str | None = None) -> list[str]:
     if result.get("verdict") != "WARN":
         return []
     dispositions = _warn_dispositions(cfg)
-    ids = [str(f.get("id", "")) for f in result.get("findings", []) if f.get("verdict") == "WARN"]
-    return [fid for fid in ids if not disposition_valid(dispositions.get(fid))]
+    target_root = Path(cfg.get("_target_root", ""))
+    unresolved=[]
+    for finding in result.get("findings", []):
+        if finding.get("verdict") != "WARN":
+            continue
+        fid=str(finding.get("id", ""))
+        if not disposition_valid(
+            dispositions.get(fid), cfg=cfg, release_set_digest=release_set_digest,
+            target_root=target_root, level_id=str(result.get("level_id", "")), finding=finding
+        ):
+            unresolved.append(fid)
+    return unresolved
 
-def _release_acceptable_result(result: dict, cfg) -> bool:
+def _release_acceptable_result(result: dict, cfg, *, release_set_digest: str | None = None) -> bool:
     verdict = result.get("verdict")
     if verdict == "PASS":
         return True
     if verdict == "WARN":
-        return not _unresolved_warns(result, cfg)
+        return not _unresolved_warns(result, cfg, release_set_digest=release_set_digest)
     return False
 
 
@@ -57,7 +69,7 @@ def _load_prior(run_root: Path) -> list[dict]:
     if not level_root.exists():
         return prior
 
-    for path in sorted(level_root.glob("S*/result.json")):
+    for path in sorted(level_root.glob("*/result.json")):
         try:
             result = read_json(path)
         except Exception:
@@ -101,6 +113,9 @@ def _required_prior_level_ids(cfg) -> list[str]:
 def run(cfg, report):
     run_root = Path(cfg.get("_run_root", ""))
     prior_results = _load_prior(run_root)
+    target_root = Path(cfg.get("_target_root", ""))
+    release_set, subject_issues = build_release_set(target_root=target_root, results=prior_results, cfg=cfg)
+    release_set_digest = release_set.get("release_set_digest")
 
     prior = [
         {
@@ -125,15 +140,26 @@ def run(cfg, report):
     bad = [
         item for item in prior
         if item.get("id") in expected_set
-        and not _release_acceptable_result(results_by_id.get(item.get("id"), {}), cfg)
+        and not _release_acceptable_result(results_by_id.get(item.get("id"), {}), cfg, release_set_digest=release_set_digest)
     ]
     warns = [item for item in prior if item.get("verdict") == "WARN"]
     unresolved_warns = {
-        level_id: _unresolved_warns(results_by_id.get(level_id, {}), cfg)
+        level_id: _unresolved_warns(results_by_id.get(level_id, {}), cfg, release_set_digest=release_set_digest)
         for level_id in expected
-        if _unresolved_warns(results_by_id.get(level_id, {}), cfg)
+        if _unresolved_warns(results_by_id.get(level_id, {}), cfg, release_set_digest=release_set_digest)
     }
-    technical_complete = not manifest_error and not missing_levels and not bad and not unresolved_warns
+    subject_required = bool(cfg.get("release_set", {}).get("required", cfg.get("release_gate", {}).get("subject_binding", {}).get("required", False)))
+    subject_ok = not subject_issues or not subject_required
+    technical_complete = not manifest_error and not missing_levels and not bad and not unresolved_warns and subject_ok
+
+    report.add(
+        "release.subject_binding",
+        "FAIL" if not subject_ok else "PASS",
+        "release_gate",
+        "ReleaseSet identity could not be proven." if not subject_ok else "ReleaseSet is deterministically bound to the exact deployable release object.",
+        evidence={"release_set_digest": release_set_digest, "identity": release_set.get("identity"), "problems": subject_issues},
+        release_blocker=not subject_ok,
+    )
 
     report.add(
         "release.prior_levels.complete",
@@ -165,6 +191,36 @@ def run(cfg, report):
         "All security WARN findings are absent or explicitly dispositioned.",
         evidence=unresolved_warns or None,
         release_blocker=bool(unresolved_warns),
+    )
+
+    try:
+        contracts_ok, contracts_detail = evaluate_security_contracts(
+            cfg=cfg, results=prior_results, release_set=release_set, subject_ok=subject_ok
+        )
+        contracts_error = None
+    except Exception as exc:
+        contracts_ok = False
+        contracts_detail = {"error": f"{type(exc).__name__}: {exc}"}
+        contracts_error = contracts_detail["error"]
+    failed_contracts = [
+        {"id": item.get("id"), "name": item.get("name"), "detail": item.get("detail")}
+        for item in contracts_detail.get("evaluated", []) if not item.get("valid")
+    ] if isinstance(contracts_detail, dict) else []
+    report.add(
+        "release.security_assurance_contracts",
+        "CONFIG_ERROR" if contracts_error else ("PASS" if contracts_ok else "FAIL"),
+        "release_gate",
+        "Senior Security Codex assurance contracts are satisfied." if contracts_ok else
+        "One or more Senior Security Codex assurance contracts lack valid release-bound evidence.",
+        evidence={
+            "required_count": contracts_detail.get("required_count") if isinstance(contracts_detail, dict) else None,
+            "valid_count": contracts_detail.get("valid_count") if isinstance(contracts_detail, dict) else None,
+            "failed_count": contracts_detail.get("failed_count") if isinstance(contracts_detail, dict) else None,
+            "failed": failed_contracts,
+            "error": contracts_error,
+        },
+        recommendation="Provide fresh signed SEC-xx attestations in the configured assurance evidence directory; do not downgrade missing evidence to documentation.",
+        release_blocker=not contracts_ok,
     )
 
     cm = cfg.get("capsule_manager", {})
@@ -297,7 +353,7 @@ def run(cfg, report):
             },
         )
 
-    gate_technical_ok = technical_complete and capsule_ok and not profile_error
+    gate_technical_ok = technical_complete and capsule_ok and contracts_ok and not profile_error
 
     if gate_technical_ok and not blocking_attestations:
         report.add(

@@ -263,11 +263,18 @@ def _run_capsule_manager(cfg, report):
         release_blocker=bool(profile_problem),
     )
 
-    gate_text = _section(text, "KX_SECURITY_GATE")
+    gate_text = _section(text, "KX_SECURITY_GATE", "KX_SECURITY_GATE_SIGNATURE")
+    sig_text = _section(text, "KX_SECURITY_GATE_SIGNATURE")
     try:
         payload = json.loads(gate_text) if gate_text else {"status": "UNKNOWN"}
     except json.JSONDecodeError:
         payload = {"status": "UNKNOWN", "reason": "invalid security-gate.json"}
+    try:
+        signature_envelope = json.loads(sig_text) if sig_text else None
+        if isinstance(signature_envelope, dict) and signature_envelope.get("status") == "MISSING":
+            signature_envelope = None
+    except json.JSONDecodeError:
+        signature_envelope = None
 
     try:
         required_checks = release_required_gate_checks(cfg)
@@ -286,16 +293,54 @@ def _run_capsule_manager(cfg, report):
         unknown_is_blocking=(True if require_release else bool(cm.get("unknown_is_blocking", True))),
         required_checks=required_checks,
     )
+
+    # Treat Capsule Manager output as signed evidence, not as authoritative merely
+    # because a JSON file on the inspected host says PASS.
+    from pathlib import Path
+    from diagcore.assurance import (
+        CAPSULE_GATE_PURPOSE, resolve_trusted_public_keys, temporal_attestation_check,
+        verify_signed_attestation,
+    )
+    target_root = Path(cfg.get("_target_root", "."))
+    signature_required = True if require_release else bool(cm.get("security_gate_signature_required", True))
+    trusted_keys = resolve_trusted_public_keys(cm.get("security_gate_trusted_public_keys"), base=target_root)
+    sig_ok, sig_detail = verify_signed_attestation(
+        payload, signature_envelope, purpose=CAPSULE_GATE_PURPOSE, public_keys=trusted_keys,
+        signature_required=signature_required,
+    )
+    max_age = int(cm.get("security_gate_max_age_seconds", 900) or 900)
+    time_ok, time_detail = temporal_attestation_check(payload, max_age_seconds=max_age)
+    subject = payload.get("subject") if isinstance(payload.get("subject"), dict) else {}
+    subject_problems = []
+    if bool(cm.get("security_gate_require_instance_binding", True)):
+        expected_iid = str(cm.get("instance_id", "")).strip()
+        if not expected_iid or str(subject.get("instance_id", "")).strip() != expected_iid:
+            subject_problems.append("security-gate subject is not bound to the configured instance_id")
+    required_subject_fields = cm.get("security_gate_required_subject_fields", ["instance_id", "manifest_digest", "image_digests"])
+    if not isinstance(required_subject_fields, list):
+        required_subject_fields = ["instance_id", "manifest_digest", "image_digests"]
+    missing_subject = [field for field in required_subject_fields if subject.get(str(field)) in (None, "", [], {})]
+    if missing_subject:
+        subject_problems.append("missing subject fields: " + ", ".join(map(str, missing_subject)))
+    subject_ok = not subject_problems
+
+    acceptable = acceptable and sig_ok and time_ok and subject_ok
+    detail.update({
+        "signature_verification": sig_detail,
+        "freshness": time_detail,
+        "subject": subject,
+        "subject_validation": {"valid": subject_ok, "problems": subject_problems},
+    })
     status = detail["status"]
     gate_verdict = "PASS" if acceptable else "FAIL"
     report.add(
         "capsule.security_gate.evidence",
         gate_verdict,
         "capsule_security",
-        f"Capsule Manager Security Gate status: {status}.",
+        f"Capsule Manager Security Gate status: {status}; signed evidence {'verified' if sig_ok else 'not verified'}.",
         evidence=detail,
         recommendation=(
-            "Run the complete Capsule Manager Security Gate and resolve missing, SKIPPED, FAIL_BLOCKING, or UNKNOWN required checks."
+            "Produce a fresh signed Capsule Manager Security Gate attestation bound to the exact instance/manifest/image digests and resolve all missing, SKIPPED, FAIL_BLOCKING, or UNKNOWN required checks."
             if not acceptable
             else None
         ),

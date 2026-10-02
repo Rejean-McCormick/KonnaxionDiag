@@ -1,73 +1,37 @@
-# KonnaxionDiag v4 — Validation report
+# KonnaxionDiag v4.2 — Validation report
 
 Date: 2026-10-02
 
-## Source baselines
+## Current v4.2 suite
 
-The supplied LevelUpDiag snapshot passed its selected baseline tests before migration:
-
-```text
-10 passed
-```
-
-The supplied SecurityDiag snapshot passed its selected baseline tests before migration:
+Executed from the packaged v4.2 source:
 
 ```text
-8 passed
+26 passed
 ```
 
-## KonnaxionDiag v4 tests
+Coverage includes the historical v4.1 regression set plus new v4.2 checks for:
 
-The v4-specific suite validates the shared command runner, manifest/taxonomy, S04W extraction, Web Trust behavior, warning disposition logic and exact detached Ed25519 release signing.
+- exact ReleaseSet construction;
+- artifact-byte changes modifying `release_set_digest`;
+- evidence changes modifying only `security_evidence_set_digest`;
+- universal attestation signature/domain/subject binding;
+- SEC-registry ingestion of universal attestations;
+- PEP denial on authorization tampering;
+- PEP denial on ReleaseSet mismatch/tampering;
+- PEP denial after authorization expiry;
+- signed RiskAcceptance release/finding binding and requester/approver separation.
 
-```text
-11 passed
-```
+## Static validation
 
-## Migrated legacy-domain regression sample
+The full Python tree is compiled with `compileall` as part of packaging validation. CLI smoke checks cover `--version`, `--help`, `sign-attestation`, `verify-attestation` argument registration and `verify-admission` registration.
 
-A namespace-adapted sample of legacy tests was executed against the migrated v4 implementation. It covers i18n, source audit, Universe/World audit, focus logic, redaction, bounded scanner behavior, SSH/remote helpers, Capsule Manager helpers, common-auth, Django check environment and firewall-port parsing.
+## Important boundary
 
-```text
-46 passed
-```
+The Konnaxion Agent / Capsule Manager source is **not present in this KonnaxionDiag package**. Consequently, v4.2 implements and tests the PEP verifier contract but does not claim that the external Agent's current `handle_instance_start()` has already been patched.
 
-## Runtime smoke — S04W
+`docs/KX_AGENT_PEP_INTEGRATION.md` specifies the required P0 Agent-side regression tests and integration contract.
 
-`kdiag run S04W` was executed against the supplied Konnaxion application snapshot. Dependency closure was:
+## Historical baselines
 
-```text
-S00 -> S01 -> S04 -> S04W
-```
-
-Results:
-
-```text
-S00  PASS
-S01  WARN   (snapshot has no .git repository metadata)
-S04  PASS
-S04W PASS
-```
-
-This confirms that S04W executes through the unified worker/report/evidence path. The campaign-level WARN is expected from the isolated SmartSnap checkout lacking Git metadata.
-
-## Runtime smoke — N11 evidence correlation
-
-`kdiag run universe-quick` was executed against the same isolated application snapshot. N11 successfully read current-run evidence directly from `.konnaxiondiag/current/levels` and reported full expected-level coverage.
-
-The campaign itself returned FAIL because the isolated SmartSnap did not include the required sibling `Konnaxion_Worlds` repository. That failure is domain evidence, not a runner/infrastructure failure.
-
-## Consolidation invariants checked
-
-- `N00..N11` IDs preserved.
-- `S00..S14` IDs preserved.
-- `S04W` added as an independent security level.
-- `release-all` order is N-profile first, then S-profile, then cross-domain correlation/final gate.
-- N07 no longer launches SecurityDiag recursively.
-- One canonical evidence root: `.konnaxiondiag`.
-- One Python GUI launcher: `KonnaxionDiagLauncher.pyw`.
-- One manifest: `kdiag_manifest.json`.
-- One base configuration: `kdiag.config.json`.
-- Security WARN findings require an explicit accepted disposition with rationale.
-- `release-all` signing fails closed when signing is required and no key is configured.
-- Detached Ed25519 signature verification detects post-signature payload mutation.
+The earlier v4.1 package recorded 20 passing KonnaxionDiag tests and a 46-test migrated legacy-domain sample. Those historical numbers are retained in the v4.1 changelog/report but were not re-run as separate external suites during this v4.2 packaging pass.

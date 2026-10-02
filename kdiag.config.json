@@ -315,6 +315,10 @@
         "timeout_seconds": 300,
         "network": true
       }
+    ],
+    "require_immutable_image_digests": true,
+    "local_image_prefixes": [
+      "konnaxion_"
     ]
   },
   "application": {
@@ -444,8 +448,25 @@
     ]
   },
   "recovery": {
-    "restore_attestation_file": "attestations/restore-drill.local.json",
-    "require_restore_drill_for_release": true
+    "restore_attestation_file": ".konnaxiondiag/assurance/restore-drill.json",
+    "require_restore_drill_for_release": true,
+    "restore_attestation_signature_file": ".konnaxiondiag/assurance/restore-drill.json.sig",
+    "restore_attestation_signature_required": true,
+    "restore_attestation_trusted_public_keys": [],
+    "restore_attestation_max_age_hours": 720,
+    "required_subject_fields": [
+      "release_set_digest",
+      "backup_digest",
+      "restore_target_identity",
+      "environment_id",
+      "trust_epoch_before",
+      "trust_epoch_after",
+      "revocation_epoch",
+      "audit_anchor"
+    ],
+    "allow_legacy_restore_attestation": false,
+    "restore_attestation_trusted_issuers": [],
+    "restore_attestation_expected_policy_digest": ""
   },
   "release": {
     "require_attestations": true,
@@ -495,6 +516,16 @@
       "allowed_images_only",
       "admin_surface_private",
       "backup_configured"
+    ],
+    "security_gate_signature_remote_path_template": "/opt/konnaxion/instances/{instance_id}/state/security-gate.sig",
+    "security_gate_signature_required": true,
+    "security_gate_trusted_public_keys": [],
+    "security_gate_max_age_seconds": 900,
+    "security_gate_require_instance_binding": true,
+    "security_gate_required_subject_fields": [
+      "instance_id",
+      "manifest_digest",
+      "image_digests"
     ]
   },
   "release_gate": {
@@ -503,6 +534,67 @@
       "required": true,
       "private_key_file": "",
       "note": "Set KDIAG_RELEASE_SIGNING_KEY to an Ed25519 private key outside the repository for release-all."
+    },
+    "subject_binding": {
+      "required": true,
+      "require_git_identity": true,
+      "require_clean_worktree": true
+    },
+    "disposition_policy": {
+      "require_metadata": true,
+      "require_expiry": true,
+      "require_subject_binding": true,
+      "require_signature": true,
+      "trusted_public_keys": [],
+      "require_schema": true,
+      "require_finding_binding": true,
+      "require_policy_version": true,
+      "min_approvals": 1,
+      "require_requester_separation": true
+    },
+    "authorization": {
+      "policy_version": "konnaxion-security-policy-v1",
+      "ttl_seconds": 3600
     }
+  },
+  "security_assurance": {
+    "enabled": true,
+    "required_contracts": "all",
+    "evidence_dir": ".konnaxiondiag/assurance/security-contracts",
+    "signature_required": true,
+    "trusted_public_keys": [],
+    "max_age_seconds": 86400,
+    "note": "SEC-01..SEC-53 are release contracts. Native validators cover only controls KonnaxionDiag can prove directly; all other controls require trusted signed subject-bound attestations.",
+    "trusted_public_keys_by_contract": {},
+    "trusted_issuers_by_contract": {},
+    "trusted_public_keys_by_authority_group": {},
+    "trusted_issuers_by_authority_group": {},
+    "allow_global_trust_fallback": false,
+    "accept_legacy_attestations": false,
+    "expected_policy_digest": ""
+  },
+  "release_set": {
+    "enabled": true,
+    "required": true,
+    "require_git_identity": true,
+    "require_clean_worktree": true,
+    "required_components": [
+      "source",
+      "capsule",
+      "images",
+      "runtime_pack",
+      "policy_bundle",
+      "infra_manifest",
+      "sbom",
+      "provenance"
+    ],
+    "components": {
+      "runtime_pack": [],
+      "policy_bundle": [],
+      "infra_manifest": [],
+      "sbom": [],
+      "provenance": []
+    },
+    "note": "Configure exact artifact files. Missing required components fail closed; security evidence is signed separately to avoid circular subject binding."
   }
 }

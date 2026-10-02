@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "konnaxiondiag.release-set.v1",
+  "type": "object",
+  "required": ["schema", "identity", "release_set_digest", "security_evidence_set_digest", "complete", "problems"],
+  "properties": {
+    "schema": {"const": "konnaxiondiag.release-set.v1"},
+    "identity": {
+      "type": "object",
+      "required": ["schema", "source_commit_sha", "source_tree_digest", "image_digests"],
+      "properties": {
+        "schema": {"const": "konnaxiondiag.release-set.identity.v1"},
+        "source_commit_sha": {"type": ["string", "null"]},
+        "source_tree_digest": {"type": ["string", "null"]},
+        "capsule_digest": {"type": ["string", "null"]},
+        "capsule_digests": {"type": "array", "items": {"type": "string"}},
+        "image_digests": {"type": "array", "items": {"type": "string"}},
+        "runtime_pack_digest": {"type": ["string", "null"]},
+        "policy_bundle_digest": {"type": ["string", "null"]},
+        "infra_manifest_digest": {"type": ["string", "null"]},
+        "sbom_digest": {"type": ["string", "null"]},
+        "provenance_digest": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "release_set_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "security_evidence_set_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "complete": {"type": "boolean"},
+    "problems": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}

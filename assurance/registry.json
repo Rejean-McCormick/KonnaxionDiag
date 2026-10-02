@@ -1,0 +1,29 @@
+{
+  "schema": "konnaxiondiag.assurance-registry.v1",
+  "security_contract_registry": "../security_contracts.json",
+  "subject_model": "release_set_digest",
+  "attestation_model": "konnaxiondiag.attestation.v1",
+  "authorization_model": "konnaxiondiag.release-authorization.v1",
+  "contracts": {
+    "release_set": "contracts/release-set.schema.json",
+    "attestation": "contracts/attestation.schema.json",
+    "risk_acceptance": "contracts/risk-acceptance.schema.json",
+    "release_authorization": "contracts/release-authorization.schema.json"
+  },
+  "verifiers": [
+    "signature",
+    "subject-binding",
+    "freshness",
+    "issuer-trust",
+    "approval",
+    "recovery",
+    "pep-admission"
+  ],
+  "taxonomy": {
+    "Nxx": "functional qualification campaigns",
+    "Sxx": "security qualification campaigns",
+    "SEC-xx": "architectural security invariants",
+    "evidence": "facts/attestations that support an invariant",
+    "PEP": "component that actually forbids the protected transition"
+  }
+}

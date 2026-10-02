@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "konnaxiondiag.release-authorization.v1",
+  "type": "object",
+  "required": ["schema", "subject", "verdict", "policy_version", "issued_at", "expires_at", "run_id", "nonce"],
+  "properties": {
+    "schema": {"const": "konnaxiondiag.release-authorization.v1"},
+    "subject": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "verdict": {"enum": ["PASS", "WARN", "BLOCKED", "ERROR"]},
+    "policy_version": {"type": "string", "minLength": 1},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "run_id": {"type": "string", "minLength": 1},
+    "nonce": {"type": "string", "minLength": 16}
+  },
+  "additionalProperties": false
+}

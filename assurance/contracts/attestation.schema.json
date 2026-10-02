@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "konnaxiondiag.attestation.v1",
+  "type": "object",
+  "required": ["schema", "issuer", "subject", "evidence_type", "status", "issued_at", "expires_at", "policy_digest", "evidence_digest", "nonce"],
+  "properties": {
+    "schema": {"const": "konnaxiondiag.attestation.v1"},
+    "issuer": {"type": "string", "minLength": 1},
+    "subject": {
+      "type": "object",
+      "required": ["release_set_digest"],
+      "properties": {"release_set_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}},
+      "additionalProperties": true
+    },
+    "evidence_type": {"type": "string", "minLength": 1},
+    "status": {"const": "PASS"},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "policy_digest": {"type": "string", "pattern": "^(sha256:)?[0-9a-fA-F]{64}$"},
+    "evidence_digest": {"type": "string", "pattern": "^(sha256:)?[0-9a-fA-F]{64}$"},
+    "nonce": {"type": "string", "minLength": 16},
+    "statement": {"type": "object"}
+  },
+  "additionalProperties": true
+}
