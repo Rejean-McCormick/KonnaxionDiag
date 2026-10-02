@@ -1,0 +1,909 @@
+{
+  "schema": "konnaxiondiag.manifest.v4",
+  "standard": "KonnaxionDiag",
+  "standard_version": "4.0.0",
+  "suite_name": "KonnaxionDiag",
+  "suite_version": "4.0.0",
+  "control_dir_default": ".konnaxiondiag",
+  "levels": [
+    {
+      "id": "N00",
+      "name": "Control & Discovery",
+      "category": "konnaxion",
+      "order": 0,
+      "required": true,
+      "depends_on": [],
+      "timeout_seconds": 120,
+      "purpose": "Start a diagnostic session, discover Konnaxion surfaces, paths and toolchain.",
+      "module": "profiles.levelup.levels.n00",
+      "profile": "levelup",
+      "runner": "levelup"
+    },
+    {
+      "id": "N01",
+      "name": "Repository & Static",
+      "category": "konnaxion",
+      "order": 10,
+      "required": true,
+      "depends_on": [
+        "N00"
+      ],
+      "timeout_seconds": 180,
+      "purpose": "Validate repository shape and static checkout state.",
+      "module": "profiles.levelup.levels.n01",
+      "profile": "levelup",
+      "runner": "levelup"
+    },
+    {
+      "id": "N02",
+      "name": "Backend / Django / DB",
+      "category": "konnaxion",
+      "order": 20,
+      "required": true,
+      "depends_on": [
+        "N00"
+      ],
+      "timeout_seconds": 1200,
+      "purpose": "Run Django system, migration and backend smoke diagnostics.",
+      "module": "profiles.levelup.levels.n02",
+      "profile": "levelup",
+      "runner": "levelup"
+    },
+    {
+      "id": "N03",
+      "name": "Frontend / Next",
+      "category": "konnaxion",
+      "order": 30,
+      "required": true,
+      "depends_on": [
+        "N00"
+      ],
+      "timeout_seconds": 2400,
+      "purpose": "Validate i18n catalogs/safety, then run TypeScript, ESLint, Jest and Next production-build diagnostics.",
+      "module": "profiles.levelup.levels.n03",
+      "profile": "levelup",
+      "runner": "levelup"
+    },
+    {
+      "id": "N04",
+      "name": "API Contracts",
+      "category": "konnaxion",
+      "order": 40,
+      "required": true,
+      "depends_on": [
+        "N00"
+      ],
+      "timeout_seconds": 900,
+      "purpose": "Check frontend/backend endpoint and OpenAPI contract surfaces.",
+      "module": "profiles.levelup.levels.n04",
+      "profile": "levelup",
+      "runner": "levelup"
+    },
+    {
+      "id": "N05",
+      "name": "Runtime & Browser",
+      "category": "konnaxion",
+      "order": 50,
+      "required": true,
+      "depends_on": [
+        "N00",
+        "N03"
+      ],
+      "timeout_seconds": 1500,
+      "purpose": "Probe local HTTP surfaces, verify the FR/EN browser switch and run Playwright smoke flows.",
+      "module": "profiles.levelup.levels.n05",
+      "profile": "levelup",
+      "runner": "levelup"
+    },
+    {
+      "id": "N06",
+      "name": "Jobs / Redis / Celery",
+      "category": "konnaxion",
+      "order": 60,
+      "required": true,
+      "depends_on": [
+        "N00"
+      ],
+      "timeout_seconds": 900,
+      "purpose": "Validate background-task tests and optional live job probes.",
+      "module": "profiles.levelup.levels.n06",
+      "profile": "levelup",
+      "runner": "levelup"
+    },
+    {
+      "id": "N07",
+      "name": "Security & Auth",
+      "category": "konnaxion",
+      "order": 70,
+      "required": true,
+      "depends_on": [
+        "N00"
+      ],
+      "timeout_seconds": 900,
+      "purpose": "Require Django auth/deploy checks, SecurityDiag S04 web-trust PASS evidence, World isolation security and Capsule Manager security-gate tests.",
+      "module": "profiles.levelup.levels.n07",
+      "profile": "levelup",
+      "runner": "levelup"
+    },
+    {
+      "id": "N08",
+      "name": "Capsule Local",
+      "category": "konnaxion",
+      "order": 80,
+      "required": true,
+      "depends_on": [
+        "N00"
+      ],
+      "timeout_seconds": 900,
+      "purpose": "Inspect Capsule Manager, capsule integrity and local runtime support.",
+      "module": "profiles.levelup.levels.n08",
+      "profile": "levelup",
+      "runner": "levelup"
+    },
+    {
+      "id": "N09",
+      "name": "Deployed Runtime",
+      "category": "konnaxion",
+      "order": 90,
+      "required": true,
+      "depends_on": [
+        "N00"
+      ],
+      "timeout_seconds": 2400,
+      "purpose": "Run safe deployed DNS/HTTP diagnostics and optional deep read-only probes.",
+      "module": "profiles.levelup.levels.n09",
+      "profile": "levelup",
+      "runner": "levelup"
+    },
+    {
+      "id": "N10",
+      "name": "Deep Scan",
+      "category": "konnaxion",
+      "order": 100,
+      "required": true,
+      "depends_on": [
+        "N00"
+      ],
+      "timeout_seconds": 3600,
+      "purpose": "Run existing Konnaxion full-scan and full backend test suite.",
+      "module": "profiles.levelup.levels.n10",
+      "profile": "levelup",
+      "runner": "levelup"
+    },
+    {
+      "id": "N11",
+      "name": "Correlation & Triage",
+      "category": "konnaxion",
+      "order": 110,
+      "required": true,
+      "depends_on": [
+        "N00"
+      ],
+      "timeout_seconds": 180,
+      "purpose": "Correlate current-session evidence and identify the likely failing domain.",
+      "module": "profiles.levelup.levels.n11",
+      "profile": "levelup",
+      "runner": "levelup"
+    },
+    {
+      "id": "S00",
+      "name": "Diagnostic Integrity",
+      "module": "profiles.security.levels.s00_diagnostic_integrity",
+      "category": "diagnostics",
+      "order": 200,
+      "required": true,
+      "depends_on": [],
+      "timeout_seconds": 60,
+      "purpose": "Validate SecurityDiag itself before trusting security evidence.",
+      "profile": "security",
+      "runner": "security"
+    },
+    {
+      "id": "S01",
+      "name": "Target & Security Context",
+      "module": "profiles.security.levels.s01_target_context",
+      "category": "context",
+      "order": 210,
+      "required": true,
+      "depends_on": [
+        "S00"
+      ],
+      "timeout_seconds": 60,
+      "purpose": "Resolve repository, Git state, safety mode, release phase and configured security targets.",
+      "profile": "security",
+      "runner": "security"
+    },
+    {
+      "id": "S02",
+      "name": "Repository Secrets & Artifact Hygiene",
+      "module": "profiles.security.levels.s02_repo_secrets",
+      "category": "repo_security",
+      "order": 220,
+      "required": true,
+      "depends_on": [
+        "S01"
+      ],
+      "timeout_seconds": 180,
+      "purpose": "Detect tracked secrets, private keys, sensitive env files and risky deployment artifacts without copying secret values.",
+      "profile": "security",
+      "runner": "security"
+    },
+    {
+      "id": "S03",
+      "name": "Supply Chain, Capsule Integrity & Automation",
+      "module": "profiles.security.levels.s03_supply_chain",
+      "category": "supply_chain",
+      "order": 230,
+      "required": true,
+      "depends_on": [
+        "S01"
+      ],
+      "timeout_seconds": 300,
+      "purpose": "Review dependency pinning, CI/container supply chain, Capsule Manager signed-artifact policy and declared dependency audits.",
+      "profile": "security",
+      "runner": "security"
+    },
+    {
+      "id": "S04",
+      "name": "Application Production Security",
+      "module": "profiles.security.levels.s04_app_production",
+      "category": "application_security",
+      "order": 240,
+      "required": true,
+      "depends_on": [
+        "S01"
+      ],
+      "timeout_seconds": 300,
+      "purpose": "Inspect production settings, authentication, compose exposure and deploy-security configuration.",
+      "profile": "security",
+      "runner": "security"
+    },
+    {
+      "id": "S04W",
+      "name": "Web Trust & Authorization",
+      "module": "profiles.security.levels.s04w_web_trust",
+      "category": "application_security",
+      "order": 245,
+      "required": true,
+      "depends_on": [
+        "S04"
+      ],
+      "timeout_seconds": 240,
+      "profile": "security",
+      "runner": "security",
+      "purpose": "Qualify IDOR/object authorization, upload containment, outbound URLs, XSS/browser sinks, CSP, throttling, WebSocket Origin policy and exploit chains."
+    },
+    {
+      "id": "S05",
+      "name": "Clean Host & OS Baseline",
+      "module": "profiles.security.levels.s05_host_baseline",
+      "category": "host",
+      "order": 250,
+      "required": true,
+      "depends_on": [
+        "S00"
+      ],
+      "timeout_seconds": 120,
+      "purpose": "Establish remote host identity, OS state, time sync and pending update evidence.",
+      "profile": "security",
+      "runner": "security"
+    },
+    {
+      "id": "S06",
+      "name": "SSH Hardening",
+      "module": "profiles.security.levels.s06_ssh",
+      "category": "host_access",
+      "order": 260,
+      "required": true,
+      "depends_on": [
+        "S05"
+      ],
+      "timeout_seconds": 120,
+      "purpose": "Verify effective SSH authentication and forwarding policy.",
+      "profile": "security",
+      "runner": "security"
+    },
+    {
+      "id": "S07",
+      "name": "Firewall & Listening Ports",
+      "module": "profiles.security.levels.s07_firewall_ports",
+      "category": "network",
+      "order": 270,
+      "required": true,
+      "depends_on": [
+        "S05"
+      ],
+      "timeout_seconds": 120,
+      "purpose": "Verify host firewall evidence and ensure internal service ports are not bound publicly.",
+      "profile": "security",
+      "runner": "security"
+    },
+    {
+      "id": "S08",
+      "name": "Docker & Capsule Runtime Policy",
+      "module": "profiles.security.levels.s08_docker",
+      "category": "container_security",
+      "order": 280,
+      "required": true,
+      "depends_on": [
+        "S05",
+        "S07"
+      ],
+      "timeout_seconds": 180,
+      "purpose": "Check Docker privilege boundaries, dangerous mounts/namespaces, image allowlists and published ports against Konnaxion runtime policy.",
+      "profile": "security",
+      "runner": "security"
+    },
+    {
+      "id": "S09",
+      "name": "Runtime Isolation, Agent & Security Gate",
+      "module": "profiles.security.levels.s09_runtime",
+      "category": "runtime",
+      "order": 290,
+      "required": true,
+      "depends_on": [
+        "S08"
+      ],
+      "timeout_seconds": 180,
+      "purpose": "Correlate runtime services with Capsule Manager Agent trust boundaries, network profile and exported Security Gate evidence.",
+      "profile": "security",
+      "runner": "security"
+    },
+    {
+      "id": "S10",
+      "name": "Secrets & Filesystem Permissions",
+      "module": "profiles.security.levels.s10_secret_permissions",
+      "category": "secrets",
+      "order": 300,
+      "required": true,
+      "depends_on": [
+        "S05"
+      ],
+      "timeout_seconds": 120,
+      "purpose": "Verify sensitive remote paths and SSH material are not broadly readable.",
+      "profile": "security",
+      "runner": "security"
+    },
+    {
+      "id": "S11",
+      "name": "Persistence & Incident IOC Scan",
+      "module": "profiles.security.levels.s11_persistence_ioc",
+      "category": "incident_recovery",
+      "order": 310,
+      "required": true,
+      "depends_on": [
+        "S05",
+        "S08"
+      ],
+      "timeout_seconds": 180,
+      "purpose": "Look for known compromise indicators, suspicious persistence and executable artifacts in temporary areas.",
+      "profile": "security",
+      "runner": "security"
+    },
+    {
+      "id": "S12",
+      "name": "External TLS & Attack Surface",
+      "module": "profiles.security.levels.s12_external_surface",
+      "category": "external_surface",
+      "order": 320,
+      "required": true,
+      "depends_on": [
+        "S00"
+      ],
+      "timeout_seconds": 180,
+      "purpose": "Probe configured public endpoints, TLS, redirects, security headers and forbidden public TCP ports.",
+      "profile": "security",
+      "runner": "security"
+    },
+    {
+      "id": "S13",
+      "name": "Backup & Recovery Evidence",
+      "module": "profiles.security.levels.s13_backup_recovery",
+      "category": "recovery",
+      "order": 330,
+      "required": true,
+      "depends_on": [
+        "S05"
+      ],
+      "timeout_seconds": 120,
+      "purpose": "Verify recent backup evidence and require an explicit isolated restore-drill attestation for release.",
+      "profile": "security",
+      "runner": "security"
+    },
+    {
+      "id": "S14",
+      "name": "Security Release Gate",
+      "module": "profiles.security.levels.s14_release_gate",
+      "category": "release_gate",
+      "order": 340,
+      "required": true,
+      "depends_on": [
+        "S02",
+        "S03",
+        "S04",
+        "S04W",
+        "S06",
+        "S07",
+        "S08",
+        "S09",
+        "S10",
+        "S11",
+        "S12",
+        "S13"
+      ],
+      "timeout_seconds": 60,
+      "purpose": "Combine SecurityDiag evidence with Capsule Manager Security Gate evidence and human recovery attestations.",
+      "profile": "security",
+      "runner": "security"
+    }
+  ],
+  "campaigns": {
+    "source-audit": {
+      "description": "Static repository and frontend↔backend contract audit before runtime checks.",
+      "execution": "sequential",
+      "levels": [
+        "N00",
+        "N01",
+        "N04",
+        "N11"
+      ],
+      "profile": "levelup"
+    },
+    "universe-quick": {
+      "description": "Fast KX-UNIVERSES-1 post-overlay boundary check: discovery, repository/static ownership audit, then correlation. No Django DB, OpenAPI, frontend build or Playwright.",
+      "execution": "sequential",
+      "levels": [
+        "N00",
+        "N01",
+        "N11"
+      ],
+      "profile": "levelup"
+    },
+    "auth-debug": {
+      "description": "Focused Konnaxion auth path: backend, frontend, API/auth contracts, browser smoke and common-auth security policy.",
+      "execution": "sequential",
+      "levels": [
+        "N00",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N07",
+        "N11"
+      ],
+      "profile": "levelup"
+    },
+    "full-local": {
+      "description": "Broad local diagnostic sequence without deployed runtime checks.",
+      "execution": "sequential",
+      "levels": [
+        "N00",
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N10",
+        "N11"
+      ],
+      "profile": "levelup"
+    },
+    "connection-debug": {
+      "description": "Primary Konnaxion connection-debug sequence.",
+      "execution": "sequential",
+      "levels": [
+        "N00",
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N11"
+      ],
+      "profile": "levelup"
+    },
+    "backend": {
+      "description": "Backend-focused sequence.",
+      "execution": "sequential",
+      "levels": [
+        "N00",
+        "N01",
+        "N02",
+        "N04",
+        "N06",
+        "N11"
+      ],
+      "profile": "levelup"
+    },
+    "frontend": {
+      "description": "Frontend-focused sequence.",
+      "execution": "sequential",
+      "levels": [
+        "N00",
+        "N01",
+        "N03",
+        "N04",
+        "N05",
+        "N11"
+      ],
+      "profile": "levelup"
+    },
+    "i18n-validation": {
+      "description": "Focused bilingual UI qualification: static repository gate, i18n-aware frontend checks, live FR/EN browser switch, then correlation.",
+      "execution": "sequential",
+      "levels": [
+        "N00",
+        "N01",
+        "N03",
+        "N05",
+        "N11"
+      ],
+      "profile": "levelup"
+    },
+    "local-runtime": {
+      "description": "Local runtime connection sequence.",
+      "execution": "sequential",
+      "levels": [
+        "N00",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N11"
+      ],
+      "profile": "levelup"
+    },
+    "capsule-local": {
+      "description": "Capsule Manager and local capsule sequence.",
+      "execution": "sequential",
+      "levels": [
+        "N00",
+        "N07",
+        "N08",
+        "N11"
+      ],
+      "profile": "levelup"
+    },
+    "deployed": {
+      "description": "Deployed read-only diagnostics; remote probes remain disabled unless explicitly configured.",
+      "execution": "sequential",
+      "levels": [
+        "N00",
+        "N07",
+        "N08",
+        "N09",
+        "N11"
+      ],
+      "profile": "levelup"
+    },
+    "deep": {
+      "description": "Broad local deep sequence.",
+      "execution": "sequential",
+      "levels": [
+        "N00",
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N08",
+        "N10",
+        "N11"
+      ],
+      "profile": "levelup"
+    },
+    "full": {
+      "description": "All Konnaxion domains in canonical N00..N11 order.",
+      "execution": "sequential",
+      "levels": [
+        "N00",
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N08",
+        "N09",
+        "N10",
+        "N11"
+      ],
+      "profile": "levelup"
+    },
+    "world-switch": {
+      "description": "Universe/World-aware validation of two-repository ownership, canonical routing, switchers, API scoping, runtime Universe/World/Release headers, fail-closed data plane, jobs and isolation invariants.",
+      "execution": "sequential",
+      "levels": [
+        "N00",
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N10",
+        "N11"
+      ],
+      "profile": "levelup"
+    },
+    "security-repo": {
+      "description": "Repository, supply-chain and application production-security checks.",
+      "levels": [
+        "S00",
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S04W"
+      ],
+      "profile": "security"
+    },
+    "security-host": {
+      "description": "Remote VPS baseline through runtime, secrets and IOC checks.",
+      "levels": [
+        "S00",
+        "S05",
+        "S06",
+        "S07",
+        "S08",
+        "S09",
+        "S10",
+        "S11"
+      ],
+      "profile": "security"
+    },
+    "security-external": {
+      "description": "External DNS/TLS/HTTP/port exposure checks.",
+      "levels": [
+        "S00",
+        "S12"
+      ],
+      "profile": "security"
+    },
+    "security-incident": {
+      "description": "Remote host access, Docker and persistence/IOC evidence for incident recovery.",
+      "levels": [
+        "S00",
+        "S05",
+        "S06",
+        "S07",
+        "S08",
+        "S10",
+        "S11"
+      ],
+      "profile": "security"
+    },
+    "security-predeploy": {
+      "description": "Local repository + clean-host checks before application deployment.",
+      "levels": [
+        "S00",
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S04W",
+        "S05",
+        "S06",
+        "S07",
+        "S10",
+        "S11"
+      ],
+      "profile": "security"
+    },
+    "security-release": {
+      "description": "Complete Konnaxion security qualification S00-S14.",
+      "levels": [
+        "S00",
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S04W",
+        "S05",
+        "S06",
+        "S07",
+        "S08",
+        "S09",
+        "S10",
+        "S11",
+        "S12",
+        "S13",
+        "S14"
+      ],
+      "profile": "security"
+    },
+    "repo": {
+      "description": "Compatibility alias for SecurityDiag repo.",
+      "levels": [
+        "S00",
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S04W"
+      ],
+      "profile": "security"
+    },
+    "host": {
+      "description": "Compatibility alias for SecurityDiag host.",
+      "levels": [
+        "S00",
+        "S05",
+        "S06",
+        "S07",
+        "S08",
+        "S09",
+        "S10",
+        "S11"
+      ],
+      "profile": "security"
+    },
+    "external": {
+      "description": "Compatibility alias for SecurityDiag external.",
+      "levels": [
+        "S00",
+        "S12"
+      ],
+      "profile": "security"
+    },
+    "release": {
+      "description": "Compatibility alias for SecurityDiag release.",
+      "levels": [
+        "S00",
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S04W",
+        "S05",
+        "S06",
+        "S07",
+        "S08",
+        "S09",
+        "S10",
+        "S11",
+        "S12",
+        "S13",
+        "S14"
+      ],
+      "profile": "security"
+    },
+    "developer": {
+      "description": "Unified local developer qualification using the LevelUp functional profile.",
+      "levels": [
+        "N00",
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N10",
+        "N11"
+      ],
+      "profile": "combined"
+    },
+    "precommit": {
+      "description": "Fast functional/static plus repository/web-trust security qualification.",
+      "levels": [
+        "N00",
+        "N01",
+        "N04",
+        "N11",
+        "S00",
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S04W"
+      ],
+      "profile": "combined"
+    },
+    "predeploy": {
+      "description": "Functional qualification plus SecurityDiag predeploy host/repository checks.",
+      "levels": [
+        "N00",
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N08",
+        "N09",
+        "N10",
+        "N11",
+        "S00",
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S04W",
+        "S05",
+        "S06",
+        "S07",
+        "S10",
+        "S11"
+      ],
+      "profile": "combined"
+    },
+    "incident": {
+      "description": "Remote host access, Docker and persistence/IOC evidence for incident recovery.",
+      "levels": [
+        "S00",
+        "S05",
+        "S06",
+        "S07",
+        "S08",
+        "S10",
+        "S11"
+      ],
+      "profile": "security"
+    },
+    "release-all": {
+      "description": "Canonical N00-N11 + S00-S14 qualification with cross-domain correlation and final release gate.",
+      "levels": [
+        "N00",
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N08",
+        "N09",
+        "N10",
+        "N11",
+        "S00",
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S04W",
+        "S05",
+        "S06",
+        "S07",
+        "S08",
+        "S09",
+        "S10",
+        "S11",
+        "S12",
+        "S13",
+        "S14"
+      ],
+      "profile": "combined",
+      "final_release_gate": true
+    }
+  },
+  "sequences": {
+    "recommended-debug": {
+      "description": "Original Konnaxion recommended escalation sequence.",
+      "campaigns": [
+        "source-audit",
+        "auth-debug",
+        "connection-debug",
+        "full-local"
+      ],
+      "continue_on_failure": true
+    },
+    "world-switch-validation": {
+      "description": "Focused KX-UNIVERSES-1 qualification followed by the broad local regression campaign.",
+      "campaigns": [
+        "world-switch",
+        "full-local"
+      ],
+      "continue_on_failure": false
+    }
+  }
+}

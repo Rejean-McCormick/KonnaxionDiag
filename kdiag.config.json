@@ -1,0 +1,508 @@
+{
+  "schema": "konnaxiondiag.config.v4",
+  "app_name": "Konnaxion",
+  "target_repo_root": "auto",
+  "control_dir": ".konnaxiondiag",
+  "toolchain": {
+    "required": [
+      "python"
+    ],
+    "optional": [
+      "git",
+      "node",
+      "pnpm",
+      "pwsh",
+      "kx"
+    ]
+  },
+  "commands": {
+    "docs": "",
+    "contracts": "",
+    "components": "",
+    "integrations": "",
+    "profiles": "",
+    "security": "",
+    "offline": "",
+    "system": ""
+  },
+  "env": {},
+  "konnaxion": {
+    "frontend_dir": "frontend",
+    "backend_dir": "backend",
+    "capsule_manager_repo": "../Konnaxion_Capsule_Manager",
+    "capsule_file": "",
+    "local_urls": [
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:8000/api/"
+    ],
+    "commands": {
+      "backend_check": [
+        "python",
+        "manage.py",
+        "check"
+      ],
+      "backend_migrations": [
+        "python",
+        "manage.py",
+        "makemigrations",
+        "--check",
+        "--dry-run"
+      ],
+      "backend_smoke": [
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_smoke_platform.py",
+        "-q"
+      ],
+      "backend_openapi": [
+        "python",
+        "-m",
+        "pytest",
+        "konnaxion/users/tests/api/test_openapi.py",
+        "-q"
+      ],
+      "backend_api_scan": [
+        "python",
+        "django_api_scanner.py"
+      ],
+      "frontend_typecheck": [
+        "pnpm",
+        "exec",
+        "tsc",
+        "-p",
+        "tsconfig.json",
+        "--noEmit",
+        "--pretty",
+        "false"
+      ],
+      "frontend_lint": [
+        "pnpm",
+        "exec",
+        "eslint",
+        "."
+      ],
+      "frontend_jest": [
+        "pnpm",
+        "exec",
+        "jest",
+        "--passWithNoTests",
+        "--runInBand"
+      ],
+      "frontend_build": [
+        "pnpm",
+        "exec",
+        "next",
+        "build"
+      ],
+      "frontend_endpoint_scan": [
+        "node",
+        "scripts/scan-endpoints.mjs"
+      ],
+      "playwright_smoke": [
+        "pnpm",
+        "run",
+        "smoke:gate"
+      ],
+      "backend_task_tests": [
+        "python",
+        "-m",
+        "pytest",
+        "konnaxion/users/tests/test_tasks.py",
+        "-q"
+      ],
+      "jobs_probe": [],
+      "django_deploy_check": [
+        "python",
+        "manage.py",
+        "check",
+        "--deploy"
+      ],
+      "capsule_security_tests": [
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_security_gate.py",
+        "-q"
+      ],
+      "capsule_manager_tests": [
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_instance_states.py",
+        "-q"
+      ],
+      "frontend_full_scan": [],
+      "backend_full_tests": [
+        "python",
+        "-m",
+        "pytest",
+        "-q"
+      ],
+      "remote_deep_diagnostic": [],
+      "backend_runtime_start": [
+        "python",
+        "-m",
+        "uvicorn",
+        "config.asgi:application",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8000"
+      ],
+      "frontend_runtime_start": [
+        "pnpm",
+        "dev"
+      ],
+      "backend_auth_policy": [
+        "python",
+        "-m",
+        "pytest",
+        "konnaxion/users/tests/test_auth_policy.py",
+        "-q"
+      ],
+      "backend_worlds_tests": [
+        "python",
+        "-m",
+        "pytest",
+        "konnaxion/worlds/tests",
+        "-q"
+      ],
+      "frontend_worlds_tests": [
+        "pnpm",
+        "exec",
+        "jest",
+        "lib/__tests__/worlds.test.ts",
+        "routes/suites.test.ts",
+        "--runInBand"
+      ],
+      "backend_worlds_isolation_tests": [
+        "python",
+        "-m",
+        "pytest",
+        "konnaxion/worlds/tests/test_multiworld_isolation.py",
+        "konnaxion/worlds/tests/test_universes.py",
+        "konnaxion/worlds/tests/test_strict_routing.py",
+        "-q"
+      ],
+      "frontend_i18n_check": [
+        "pnpm",
+        "run",
+        "i18n:check"
+      ],
+      "i18n_browser_probe": [],
+      "securitydiag_web_trust": []
+    },
+    "remote": {
+      "enabled": false,
+      "domain": "",
+      "urls": [],
+      "http_timeout_seconds": 10,
+      "allow_insecure_tls": false,
+      "deep_timeout_seconds": 1800
+    },
+    "runtime_autostart": true,
+    "runtime_startup_timeout_seconds": 120,
+    "worlds": {
+      "architecture_lock": "KX-UNIVERSES-1",
+      "backend_api_base_url": "",
+      "http_timeout_seconds": 5,
+      "runtime_probe_world_key": "",
+      "data_plane_probe_path": "ethikos/",
+      "repo_dir": "../Konnaxion_Worlds",
+      "test_settings_module": "worlds_config.settings",
+      "runtime_probe_universe_key": ""
+    },
+    "i18n_browser_probe_path": "/ekoh/dashboard?sidebar=ekoh",
+    "i18n_browser_probe_timeout_seconds": 180,
+    "i18n_browser_probe_required": true,
+    "securitydiag_repo": "",
+    "securitydiag_required": false
+  },
+  "execution": {
+    "mode": "sequential",
+    "default_timeout_seconds": 180,
+    "fail_fast": false,
+    "capture_limit_kb": 256,
+    "retention": "current_only",
+    "purge_legacy_evidence": true,
+    "protect_tracked_files": true,
+    "command_heartbeat_seconds": 15,
+    "allow_network": false,
+    "allow_target_mutation": false,
+    "allow_declared_audits": false
+  },
+  "redaction": {
+    "enabled": true,
+    "replacement": "[REDACTED]"
+  },
+  "phase": "predeploy",
+  "scan": {
+    "exclude_dirs": [
+      ".git",
+      ".konnaxiondiag",
+      "node_modules",
+      ".next",
+      "dist",
+      "build",
+      ".venv",
+      "venv",
+      "__pycache__",
+      ".pytest_cache",
+      ".mypy_cache",
+      "coverage",
+      ".kx_deploy_backups"
+    ],
+    "max_files": 25000,
+    "max_file_bytes": 1048576
+  },
+  "repo_security": {
+    "scan_untracked": true,
+    "archive_extensions": [
+      ".zip",
+      ".tar",
+      ".tgz",
+      ".tar.gz",
+      ".7z"
+    ],
+    "sensitive_names": [
+      ".env",
+      "id_rsa",
+      "id_dsa",
+      "id_ecdsa",
+      "id_ed25519"
+    ],
+    "placeholder_tokens": [
+      "changeme",
+      "change-me",
+      "change_me",
+      "example",
+      "replace-me",
+      "replace_this",
+      "your-",
+      "your_",
+      "dummy",
+      "development-only",
+      "dev-only",
+      "postgres:postgres@",
+      "<secret>",
+      "<password>"
+    ]
+  },
+  "supply_chain": {
+    "declared_audits": [
+      {
+        "id": "frontend-pnpm-audit",
+        "enabled": false,
+        "command": [
+          "pnpm",
+          "audit",
+          "--prod",
+          "--json"
+        ],
+        "cwd": "frontend",
+        "timeout_seconds": 300,
+        "network": true
+      },
+      {
+        "id": "backend-pip-audit",
+        "enabled": false,
+        "command": [
+          "pip-audit",
+          "--format=json"
+        ],
+        "cwd": "backend",
+        "timeout_seconds": 300,
+        "network": true
+      }
+    ]
+  },
+  "application": {
+    "django_production_settings": "backend/config/settings/production.py",
+    "django_base_settings": "backend/config/settings/base.py",
+    "production_compose": "backend/docker-compose.production.yml",
+    "frontend_next_config": "frontend/next.config.ts",
+    "django_check": {
+      "enabled": false,
+      "command": [
+        "python",
+        "manage.py",
+        "check",
+        "--deploy",
+        "--settings=config.settings.production"
+      ],
+      "cwd": "backend",
+      "timeout_seconds": 180,
+      "environment": {}
+    },
+    "require_django_check_in_production": true,
+    "django_urls": "backend/config/urls.py",
+    "django_user_model": "backend/konnaxion/users/models.py",
+    "django_user_adapters": "backend/konnaxion/users/adapters.py",
+    "backend_requirements": "backend/requirements/base.txt",
+    "frontend_production_env": "frontend/env.production.example",
+    "frontend_package": "frontend/package.json"
+  },
+  "remote": {
+    "enabled": false,
+    "host": "",
+    "user": "ops",
+    "port": 22,
+    "connect_timeout_seconds": 10,
+    "strict_host_key_checking": "yes",
+    "identity_file": "",
+    "known_hosts_file": "",
+    "sudo_mode": "none",
+    "require_ufw": true,
+    "forbid_remote_user_docker_group": true,
+    "forbidden_public_ports": [
+      2375,
+      2376,
+      3000,
+      5432,
+      5555,
+      6379,
+      8000
+    ],
+    "allowed_public_bind_ports": [
+      22,
+      80,
+      443
+    ],
+    "secret_paths": [],
+    "backup_paths": [],
+    "backup_max_age_hours": 30,
+    "docker": {
+      "required": true,
+      "strict_container_allowlist": true,
+      "allowed_compose_projects": [
+        "konnaxion",
+        "backend"
+      ],
+      "allowed_image_prefixes": [
+        "konnaxion_",
+        "redis:",
+        "redis@",
+        "postgres:",
+        "postgres@",
+        "traefik:",
+        "traefik@",
+        "nginx:",
+        "nginx@"
+      ]
+    },
+    "iocs": {
+      "tokens": [
+        "negoroo/amco",
+        "supportxmr",
+        "/tmp/sshd",
+        "pakchoi",
+        "amco_",
+        "xmrig"
+      ],
+      "exact_paths": [
+        "/tmp/sshd"
+      ],
+      "usernames": [
+        "pakchoi"
+      ]
+    },
+    "require_fail2ban": true,
+    "require_unattended_upgrades": true,
+    "allowed_sudo_users": [],
+    "allowed_ssh_key_fingerprints": []
+  },
+  "external": {
+    "enabled": false,
+    "host": "konnaxion.com",
+    "https_port": 443,
+    "http_port": 80,
+    "required_open_ports": [
+      80,
+      443
+    ],
+    "administrative_ports": [
+      22
+    ],
+    "forbidden_ports": [
+      2375,
+      2376,
+      3000,
+      5432,
+      5555,
+      6379,
+      8000
+    ],
+    "timeout_seconds": 3,
+    "require_hsts": true,
+    "recommended_headers": [
+      "X-Content-Type-Options",
+      "X-Frame-Options",
+      "Referrer-Policy",
+      "Content-Security-Policy",
+      "Permissions-Policy"
+    ]
+  },
+  "recovery": {
+    "restore_attestation_file": "attestations/restore-drill.local.json",
+    "require_restore_drill_for_release": true
+  },
+  "release": {
+    "require_attestations": true,
+    "attestations": {
+      "fresh_vps": false,
+      "old_disk_not_cloned": false,
+      "all_compromised_secrets_rotated": false,
+      "clean_git_source_only": false,
+      "cloud_firewall_verified": false,
+      "old_vps_retired_or_isolated": false
+    },
+    "profile": "standard_release",
+    "warn_dispositions": {}
+  },
+  "capsule_manager": {
+    "enabled": false,
+    "repo_root": "auto",
+    "instance_id": "",
+    "agent_port": 8765,
+    "require_for_release": true,
+    "unknown_is_blocking": true,
+    "require_local_agent_bind": true,
+    "security_gate_remote_path_template": "/opt/konnaxion/instances/{instance_id}/state/security-gate.json",
+    "agent_token_path": "/opt/konnaxion/manager/agent.token",
+    "audit_path": "/opt/konnaxion/agent/audit/agent-audit.jsonl",
+    "agent_service_name": "kx-agent",
+    "runtime_env_remote_path_template": "/opt/konnaxion/instances/{instance_id}/env/runtime.env",
+    "policy_files": {
+      "security_gate": "policies/security_gate.yaml",
+      "runtime": "policies/runtime_policy.yaml",
+      "agent_auth": "kx_agent/auth.py"
+    },
+    "expected_agent_user": "kx-agent",
+    "required_gate_checks": [
+      "capsule_signature",
+      "image_checksums",
+      "manifest_schema",
+      "secrets_present",
+      "secrets_not_default",
+      "firewall_enabled",
+      "dangerous_ports_blocked",
+      "postgres_not_public",
+      "redis_not_public",
+      "docker_socket_not_mounted",
+      "no_privileged_containers",
+      "no_host_network",
+      "allowed_images_only",
+      "admin_surface_private",
+      "backup_configured"
+    ]
+  },
+  "release_gate": {
+    "security_warn_dispositions": {},
+    "signing": {
+      "required": true,
+      "private_key_file": "",
+      "note": "Set KDIAG_RELEASE_SIGNING_KEY to an Ed25519 private key outside the repository for release-all."
+    }
+  }
+}

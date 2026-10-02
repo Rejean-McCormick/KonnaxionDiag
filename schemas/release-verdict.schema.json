@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "konnaxiondiag.release-verdict.v4",
+  "type": "object",
+  "required": ["schema", "campaign", "run_id", "verdict", "functional", "security", "signature"],
+  "properties": {
+    "schema": {"const": "konnaxiondiag.release-verdict.v4"},
+    "verdict": {"enum": ["PASS", "WARN", "BLOCKED", "ERROR"]},
+    "functional": {"type": "object"},
+    "security": {"type": "object"},
+    "signature": {"type": "object"}
+  },
+  "additionalProperties": true
+}

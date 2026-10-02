@@ -1,0 +1,16 @@
+{
+  "schema": "konnaxiondiag.config.v4",
+  "target_repo_root": "auto",
+  "release_gate": {
+    "security_warn_dispositions": {
+      "example.finding.id": {
+        "status": "accepted",
+        "rationale": "Documented temporary risk acceptance."
+      }
+    },
+    "signing": {
+      "required": true,
+      "private_key_file": ""
+    }
+  }
+}

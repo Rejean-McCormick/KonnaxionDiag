@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "konnaxiondiag.report.v4",
+  "type": "object",
+  "required": ["schema", "standard", "profile", "level_id", "level_name", "verdict", "findings"],
+  "properties": {
+    "schema": {"const": "konnaxiondiag.report.v4"},
+    "standard": {"const": "KonnaxionDiag"},
+    "profile": {"enum": ["levelup", "security"]},
+    "level_id": {"pattern": "^(N\\d{2}|S(?:\\d{2}|04W))$"},
+    "verdict": {"enum": ["PASS", "WARN", "FAIL", "SKIP", "BLOCKED", "PARTIAL", "ERROR", "INFRA_ERROR", "CONFIG_ERROR"]},
+    "findings": {"type": "array"}
+  },
+  "additionalProperties": true
+}

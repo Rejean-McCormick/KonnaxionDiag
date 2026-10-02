@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "konnaxiondiag.campaign-summary.v4",
+  "type": "object",
+  "required": ["schema", "standard", "run_id", "campaign", "verdict", "expected_levels", "levels"],
+  "properties": {
+    "schema": {"const": "konnaxiondiag.campaign-summary.v4"},
+    "standard": {"const": "KonnaxionDiag"},
+    "verdict": {"enum": ["PASS", "WARN", "FAIL", "SKIP", "BLOCKED", "PARTIAL", "ERROR", "INFRA_ERROR", "CONFIG_ERROR"]},
+    "levels": {"type": "array"}
+  },
+  "additionalProperties": true
+}

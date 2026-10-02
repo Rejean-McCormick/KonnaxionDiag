@@ -1,0 +1,11 @@
+{
+  "schema": "securitydiag.restore-attestation.v1",
+  "performed_at": "YYYY-MM-DDTHH:MM:SSZ",
+  "operator": "",
+  "isolated_target": true,
+  "database_restored": false,
+  "application_booted": false,
+  "critical_data_verified": false,
+  "offsite_copy_verified": false,
+  "notes": ""
+}
