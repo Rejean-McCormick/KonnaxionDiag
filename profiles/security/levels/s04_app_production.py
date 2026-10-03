@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from profiles.security.support.scanner import bounded_text
+from profiles.security.support.scanner import bounded_text, iter_files
 from diagcore.commands import run_command
 
 def check_text(report,path,text,fid,pattern,message_ok,message_bad,verdict_bad="FAIL",recommendation=None):
@@ -311,9 +311,23 @@ def _check_web_trust_boundaries(cfg, report, root: Path, app: dict) -> None:
     dangerous_html = []
     direct_open = []
     frontend = root / "frontend"
+    scan_stats = {}
+    # S04W qualifies authored frontend source, not generated reports/traces.  In
+    # particular Playwright HTML traces may bundle third-party UI code containing
+    # raw HTML/window.open calls that are not shipped as Konnaxion application
+    # source.  Keep this filter local to web-trust so repo/artifact hygiene scans
+    # can still inspect frontend/artifacts independently.
+    generated_frontend_dirs = {
+        "artifacts", ".next", "node_modules", "coverage", "dist", "build",
+        "playwright-report", "test-results",
+    }
     if frontend.exists():
-        for path in frontend.rglob("*"):
-            if not path.is_file() or path.suffix.lower() not in {".ts", ".tsx", ".js", ".jsx"}:
+        max_files=int(cfg.get('scan',{}).get('max_files',25000))
+        for path, frontend_rel in iter_files(frontend,cfg,max_files=max_files,stats=scan_stats):
+            rel_parts=Path(frontend_rel).parts
+            if any(part in generated_frontend_dirs for part in rel_parts[:-1]):
+                continue
+            if path.suffix.lower() not in {".ts", ".tsx", ".js", ".jsx"}:
                 continue
             text = bounded_text(path, 2 * 1024 * 1024) or ""
             rel = path.relative_to(root).as_posix()
@@ -321,6 +335,14 @@ def _check_web_trust_boundaries(cfg, report, root: Path, app: dict) -> None:
                 dangerous_html.append(rel)
             if "window.open(" in text and rel != "frontend/lib/security/navigation.ts":
                 direct_open.append(rel)
+    scan_complete=not bool(scan_stats.get('limit_reached'))
+    report.add(
+        "app.web_trust.source_scan_coverage", "PASS" if scan_complete else "FAIL", "web_trust",
+        f"Frontend trust scan completed over {scan_stats.get('files_yielded',0)} bounded files." if scan_complete else
+        f"Frontend trust scan stopped at the configured {scan_stats.get('files_yielded',0)}-file limit.",
+        evidence={"files_yielded":scan_stats.get('files_yielded',0),"limit_reached":not scan_complete},
+        release_blocker=not scan_complete,
+    )
     browser_safe = not dangerous_html and not direct_open and _has(navigation, "openExternalUrlSafely", "noopener,noreferrer")
     report.add(
         "app.web_trust.browser_sinks", "PASS" if browser_safe else "FAIL", "web_trust",

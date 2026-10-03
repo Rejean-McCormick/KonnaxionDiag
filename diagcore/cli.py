@@ -6,7 +6,7 @@ from .config import ConfigError,load_config
 from .manifest import ManifestError,load_manifest
 from .runner import run_campaign,run_named_sequence
 from .worker import run_worker
-from .utils import read_json,write_json
+from .utils import read_json,write_json,log_line
 from .signing import sign_evidence,verify_evidence
 from assurance.attestation import attestation_purpose, validate_universal_attestation
 from assurance.release_set import build_release_set
@@ -67,14 +67,14 @@ def main(argv=None):
         if args.cmd=='run-sequence':
             cfg=load_config(root,args.target);outcomes=run_named_sequence(args.sequence,cfg)
             if not outcomes:return 30
-            for outcome in outcomes:print(f"{outcome.get('campaign')}: {outcome.get('verdict')}")
+            for outcome in outcomes:log_line(f"{outcome.get('campaign')}: {outcome.get('verdict')}")
             return max(exit_code(x.get('verdict','ERROR')) for x in outcomes)
         if args.cmd=='show-config':
             cfg=load_config(root,args.target);print(json.dumps(cfg.data,indent=2,ensure_ascii=False));return 0
         if args.cmd=='run':
             summary,code,run_root=run_campaign(args.selection,config=load_config(root,args.target),fail_fast=args.fail_fast)
-            print((run_root/'summary.txt').read_text(encoding='utf-8'),end='');print(f'Evidence: {run_root}')
-            if (run_root/'release-verdict.json').exists():print(f'Release verdict: {run_root/"release-verdict.json"}')
+            print((run_root/'summary.txt').read_text(encoding='utf-8'),end='');log_line(f'Evidence: {run_root}')
+            if (run_root/'release-verdict.json').exists():log_line(f'Release verdict: {run_root/"release-verdict.json"}')
             return code
         if args.cmd=='verify-run':
             p=Path(args.summary);s=read_json(p)
@@ -128,5 +128,5 @@ def main(argv=None):
             print('ADMIT' if ok else 'DENY');print(json.dumps(detail,indent=2,ensure_ascii=False));return 0 if ok else 20
         if args.cmd=='_worker':return run_worker(root,args.level,args.run_id,Path(args.output),args.target)
     except (ConfigError,ManifestError,ValueError,OSError) as exc:
-        print(f'KonnaxionDiag error: {type(exc).__name__}: {exc}',file=sys.stderr);return 30
+        log_line(f'KonnaxionDiag error: {type(exc).__name__}: {exc}',file=sys.stderr);return 30
     return 64

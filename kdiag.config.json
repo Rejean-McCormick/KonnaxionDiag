@@ -203,6 +203,7 @@
     },
     "runtime_autostart": true,
     "runtime_startup_timeout_seconds": 120,
+    "release_all_skip_playwright": true,
     "worlds": {
       "architecture_lock": "KX-UNIVERSES-1",
       "backend_api_base_url": "",

@@ -2,6 +2,7 @@ from __future__ import annotations
 import re, shutil, subprocess, time
 from pathlib import Path
 from diagcore.utils import redact, tail_text
+from diagcore.subprocesses import hidden_process_kwargs, diagnostic_subprocess_env, decode_process_output
 
 class RemoteBlocked(RuntimeError): pass
 SAFE_HOST=re.compile(r"^[A-Za-z0-9._:\-\[\]]+$")
@@ -42,11 +43,15 @@ def _script_bytes(script):
     return text.encode("utf-8")
 
 def _decode(value):
-    if isinstance(value,bytes):
-        return value.decode("utf-8","replace")
-    return value or ""
+    return decode_process_output(value)
 
 def run_script(cfg, script, *, privileged=False, timeout_seconds=90):
+    # Resolve network/target availability before privilege requirements so an
+    # offline/disabled VPS is reported consistently and does not masquerade as
+    # a sudo configuration problem.
+    ready,reason=remote_ready(cfg)
+    if not ready:
+        raise RemoteBlocked(reason)
     r=cfg.get("remote",{})
     remote_user=str(r.get("user","")).strip()
     if privileged and remote_user != "root":
@@ -61,8 +66,8 @@ def run_script(cfg, script, *, privileged=False, timeout_seconds=90):
     try:
         # Send bytes, not text. On Windows, text-mode subprocess stdin converts LF to CRLF,
         # which makes bash receive stray '\r' characters and can break shell scripts.
-        cp=subprocess.run(argv,input=_script_bytes(script),stdout=subprocess.PIPE,stderr=subprocess.PIPE,
-                          timeout=timeout_seconds,shell=False,check=False)
+        cp=subprocess.run(argv,input=_script_bytes(script),env=diagnostic_subprocess_env(),stdout=subprocess.PIPE,stderr=subprocess.PIPE,
+                          timeout=timeout_seconds,shell=False,check=False,**hidden_process_kwargs())
         out=_decode(cp.stdout); err=_decode(cp.stderr)
         return {"exit_code":cp.returncode,"timed_out":False,
                 "duration_seconds":round(time.monotonic()-started,3),

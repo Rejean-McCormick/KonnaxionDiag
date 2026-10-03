@@ -1,5 +1,46 @@
 # Changelog
 
+## 4.2.4 - S04W generated-artifact filtering
+
+- Web Trust source scanning now ignores generated frontend artifact/report directories such as `frontend/artifacts`, Playwright reports, `.next`, coverage, dist/build, and test-results.
+- Prevents Playwright trace bundles from being misclassified as authored Konnaxion browser sinks while preserving artifact inspection in the dedicated repository/security hygiene scans.
+- Regression coverage verifies that generated trace JavaScript cannot trigger `app.web_trust.browser_sinks`.
+
+## 4.2.3 - Runtime continuation + bounded Web Trust scan
+
+- N05 no longer gets suppressed solely because N03 failed: N00 remains a strict prerequisite, but the frontend build verdict is order-only for N05 so local runtime/HTTP probes can still execute during `release-all`.
+- `release-all` still skips Playwright; the dedicated Playwright button/campaign remains explicit.
+- S04W now traverses frontend sources through the bounded scanner and honors configured excluded directories such as `node_modules`, `.next`, `artifacts`, coverage and build output.
+- Added an explicit Web Trust source-scan coverage finding; hitting the configured file limit fails closed instead of silently truncating the security scan.
+- Regression validation: 47 tests pass; S04W scans the Konnaxion snapshot (543 bounded files) in well under one second in the validation environment.
+
+## 4.2.2 - Operator dashboard + compact timestamps
+
+- Human-facing timestamps now render as `[HH:MM]` only; date, seconds and timezone remain only in machine JSON evidence.
+- Added a tabbed launcher: Santé générale, Fonctionnel N00-N11, Sécurité S00-S14 and Campagnes.
+- Added `Quick test`, `Test All` and separate `Playwright` actions on the first tab.
+- Added `health-quick` and `playwright` campaigns; `release-all` retains its configured Playwright skip.
+- Added live level status tracking, PASS/WARN/BLOCKED/FAIL counters, campaign progress, persistent global log, evidence/doctor/triage actions.
+- Preserved hidden Windows subprocesses, UTF-8 output cleanup and offline security continuation.
+
+## 4.2.1 - Windows log encoding + offline security continuation
+
+- Forced UTF-8 for Python diagnostic children and added robust UTF-8/Windows-codepage decoding for captured subprocess output.
+- Stripped ANSI/OSC terminal control sequences from captured command output and requested no-color output from child tools.
+- Replaced non-ASCII campaign separators/heartbeats in the live console path with ASCII-safe equivalents, eliminating the visible replacement-character artifacts in normal KonnaxionDiag messages.
+- Security remote dependencies S06-S14 now use order-only orchestration where appropriate: an unavailable/disabled VPS no longer cancels downstream levels before they can run their own local/static checks.
+- S14 now executes even when prior remote evidence is blocked, so it can emit the real aggregate release-gate finding instead of a synthetic dependency block.
+- Dependency-blocked/fail-fast levels are explicitly logged with timestamp and reason instead of silently disappearing from the live sequence.
+- Remote readiness is evaluated before sudo requirements, producing a coherent network/VPS-unavailable reason when remote execution cannot run.
+- Preserved release-all Playwright skipping, hidden Windows subprocesses, and timestamped live/evidence logs.
+- Validation: 40 tests passing plus an offline-security smoke run proving S05 -> S13 continue independently.
+
+## Unreleased — quiet Windows subprocesses
+
+- KonnaxionDiag-launched subprocesses now use Windows `CREATE_NO_WINDOW`, preventing CMD/PowerShell/Python console windows from flashing during GUI diagnostics.
+- Runtime child processes retain their process-group behavior so stop/cleanup semantics are unchanged.
+- `release-all` Playwright skipping remains scoped by `konnaxion.release_all_skip_playwright`.
+
 ## 4.2.0 — Exact ReleaseSet + universal attestation + PEP contract
 
 ### ReleaseSet / subject binding

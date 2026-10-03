@@ -6,6 +6,7 @@ import os
 import platform
 import socket
 import subprocess
+from diagcore.subprocesses import hidden_process_kwargs
 import sys
 import time
 from datetime import datetime
@@ -81,6 +82,14 @@ def _worlds_focused(config: AppConfig) -> bool:
 def _i18n_focused(config: AppConfig) -> bool:
     """True only for the focused bilingual UI qualification campaign."""
     return _current_campaign(config) == "i18n-validation"
+
+
+def _release_all_skip_playwright(config: AppConfig) -> bool:
+    """Allow release-all to skip browser automation while retaining other N05 probes."""
+    if _current_campaign(config) != "release-all":
+        return False
+    section = config.get("konnaxion", {})
+    return bool(section.get("release_all_skip_playwright", False)) if isinstance(section, dict) else False
 
 
 def _worlds_report(config: AppConfig) -> dict[str, Any]:
@@ -832,7 +841,7 @@ def _start_runtime_process(command: list[str] | None, cwd: Path, env: dict[str, 
         "shell": False,
     }
     if os.name == "nt":
-        kwargs["creationflags"] = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+        kwargs.update(hidden_process_kwargs(new_process_group=True))
     else:
         kwargs["start_new_session"] = True
     return subprocess.Popen(args, **kwargs)
@@ -851,6 +860,7 @@ def _stop_runtime_process(proc: subprocess.Popen[str] | None) -> None:
                 timeout=15,
                 shell=False,
                 check=False,
+                **hidden_process_kwargs(),
             )
         else:
             import signal
@@ -963,8 +973,17 @@ def runtime_smoke(config: AppConfig, level_id: str, level_name: str) -> LevelRes
                 ))
 
         playwright_timeout = int(section.get("playwright_smoke_timeout_seconds", 2400))
+        skip_release_playwright = _release_all_skip_playwright(config)
         step = None
-        if _worlds_focused(config):
+        if skip_release_playwright:
+            findings.append(Finding(
+                "kx.runtime.playwright-smoke",
+                SKIP,
+                "Playwright smoke is skipped for release-all by konnaxion.release_all_skip_playwright.",
+                "runtime",
+                recommendation="Run full-local separately when the full browser smoke is required.",
+            ))
+        elif _worlds_focused(config):
             findings.append(Finding(
                 "kx.runtime.playwright-smoke",
                 SKIP,
@@ -1020,7 +1039,16 @@ def runtime_smoke(config: AppConfig, level_id: str, level_name: str) -> LevelRes
             findings.append(finding)
 
         i18n_report = audit_i18n(frontend_dir)
-        if i18n_report.get("detected") and not _worlds_focused(config):
+        if i18n_report.get("detected") and skip_release_playwright:
+            findings.append(Finding(
+                "kx.runtime.i18n-browser-switch",
+                SKIP,
+                "FR/EN Playwright browser probe is skipped for release-all by konnaxion.release_all_skip_playwright.",
+                "runtime",
+                recommendation="Run i18n-validation separately when live browser language switching must be requalified.",
+            ))
+            outputs_i18n = ""
+        elif i18n_report.get("detected") and not _worlds_focused(config):
             frontend_url = next((str(url) for url in urls if ":3000" in str(url)), str(urls[0]) if urls else "http://127.0.0.1:3000")
             probe_path = str(section.get("i18n_browser_probe_path", "/ekoh/dashboard?sidebar=ekoh"))
             i18n_timeout = int(section.get("i18n_browser_probe_timeout_seconds", 180))
@@ -1060,6 +1088,7 @@ def runtime_smoke(config: AppConfig, level_id: str, level_name: str) -> LevelRes
                 "worlds_runtime_probe": probe_report,
                 "focused_worlds_campaign": _worlds_focused(config),
                 "focused_i18n_campaign": _i18n_focused(config),
+                "release_all_skip_playwright": skip_release_playwright,
                 "i18n": audit_i18n(frontend_dir),
             },
         )

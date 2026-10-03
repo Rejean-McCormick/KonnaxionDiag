@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field, asdict
 from typing import Any
-from . import REPORT_SCHEMA
+from . import REPORT_SCHEMA, VERSION
 
 @dataclass(slots=True)
 class Finding:
@@ -69,7 +69,7 @@ class LevelResult:
         data = {
             "schema": REPORT_SCHEMA,
             "standard": "KonnaxionDiag",
-            "standard_version": "4.2.0",
+            "standard_version": VERSION,
             "profile": profile,
             "run_id": run_id,
             "level_id": self.level,

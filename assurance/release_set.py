@@ -9,6 +9,7 @@ from typing import Any, Iterable
 
 from diagcore import VERSION
 from diagcore.utils import read_json, redact_data
+from diagcore.subprocesses import hidden_process_kwargs
 
 RELEASE_SET_SCHEMA = "konnaxiondiag.release-set.v1"
 SHA256_PREFIX = "sha256:"
@@ -38,7 +39,7 @@ def _run_git(target: Path, *args: str) -> str | None:
             ["git", *args], cwd=str(target), stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
             text=True, encoding="utf-8", errors="replace", timeout=20,
-            shell=False, check=False,
+            shell=False, check=False, **hidden_process_kwargs(),
         )
         return cp.stdout.strip() if cp.returncode == 0 else None
     except Exception:

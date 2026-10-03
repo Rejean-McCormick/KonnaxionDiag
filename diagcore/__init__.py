@@ -1,5 +1,5 @@
 """KonnaxionDiag v4.2 shared diagnostic engine."""
-VERSION = "4.2.0"
+VERSION = "4.2.4"
 REPORT_SCHEMA = "konnaxiondiag.report.v4"
 SUMMARY_SCHEMA = "konnaxiondiag.campaign-summary.v4"
 RELEASE_SCHEMA = "konnaxiondiag.release-verdict.v4"

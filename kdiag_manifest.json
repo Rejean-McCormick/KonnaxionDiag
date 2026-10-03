@@ -1,9 +1,9 @@
 {
   "schema": "konnaxiondiag.manifest.v4",
   "standard": "KonnaxionDiag",
-  "standard_version": "4.2.0",
+  "standard_version": "4.2.4",
   "suite_name": "KonnaxionDiag",
-  "suite_version": "4.2.0",
+  "suite_version": "4.2.4",
   "control_dir_default": ".konnaxiondiag",
   "levels": [
     {
@@ -90,10 +90,13 @@
         "N03"
       ],
       "timeout_seconds": 1500,
-      "purpose": "Probe local HTTP surfaces, verify the FR/EN browser switch and run Playwright smoke flows.",
+      "purpose": "Probe local HTTP/runtime surfaces even when the frontend build gate fails; browser automation remains separately controllable.",
       "module": "profiles.levelup.levels.n05",
       "profile": "levelup",
-      "runner": "levelup"
+      "runner": "levelup",
+      "nonblocking_depends_on": [
+        "N03"
+      ]
     },
     {
       "id": "N06",
@@ -301,7 +304,8 @@
       "timeout_seconds": 120,
       "purpose": "Verify effective SSH authentication and forwarding policy.",
       "profile": "security",
-      "runner": "security"
+      "runner": "security",
+      "dependency_policy": "order_only"
     },
     {
       "id": "S07",
@@ -316,7 +320,8 @@
       "timeout_seconds": 120,
       "purpose": "Verify host firewall evidence and ensure internal service ports are not bound publicly.",
       "profile": "security",
-      "runner": "security"
+      "runner": "security",
+      "dependency_policy": "order_only"
     },
     {
       "id": "S08",
@@ -332,7 +337,8 @@
       "timeout_seconds": 180,
       "purpose": "Check Docker privilege boundaries, dangerous mounts/namespaces, image allowlists and published ports against Konnaxion runtime policy.",
       "profile": "security",
-      "runner": "security"
+      "runner": "security",
+      "dependency_policy": "order_only"
     },
     {
       "id": "S09",
@@ -347,7 +353,8 @@
       "timeout_seconds": 180,
       "purpose": "Correlate runtime services with Capsule Manager Agent trust boundaries, network profile and exported Security Gate evidence.",
       "profile": "security",
-      "runner": "security"
+      "runner": "security",
+      "dependency_policy": "order_only"
     },
     {
       "id": "S10",
@@ -362,7 +369,8 @@
       "timeout_seconds": 120,
       "purpose": "Verify sensitive remote paths and SSH material are not broadly readable.",
       "profile": "security",
-      "runner": "security"
+      "runner": "security",
+      "dependency_policy": "order_only"
     },
     {
       "id": "S11",
@@ -378,7 +386,8 @@
       "timeout_seconds": 180,
       "purpose": "Look for known compromise indicators, suspicious persistence and executable artifacts in temporary areas.",
       "profile": "security",
-      "runner": "security"
+      "runner": "security",
+      "dependency_policy": "order_only"
     },
     {
       "id": "S12",
@@ -408,7 +417,8 @@
       "timeout_seconds": 120,
       "purpose": "Verify recent backup evidence and require an explicit isolated restore-drill attestation for release.",
       "profile": "security",
-      "runner": "security"
+      "runner": "security",
+      "dependency_policy": "order_only"
     },
     {
       "id": "S14",
@@ -434,10 +444,33 @@
       "timeout_seconds": 60,
       "purpose": "Combine SecurityDiag evidence with Capsule Manager Security Gate evidence and human recovery attestations.",
       "profile": "security",
-      "runner": "security"
+      "runner": "security",
+      "dependency_policy": "order_only"
     }
   ],
   "campaigns": {
+    "health-quick": {
+      "description": "Quick general-health check: discovery/static state, local Capsule support, diagnostic integrity, repository secret hygiene and production-security configuration. No Playwright, full build, DB suite or remote VPS dependency.",
+      "execution": "sequential",
+      "levels": [
+        "N00",
+        "N01",
+        "N08",
+        "S00",
+        "S01",
+        "S02",
+        "S04"
+      ],
+      "profile": "combined"
+    },
+    "playwright": {
+      "description": "On-demand local browser/runtime qualification. Runs N05 explicitly, including Playwright smoke and the live FR/EN browser-switch probe.",
+      "execution": "sequential",
+      "levels": [
+        "N05"
+      ],
+      "profile": "levelup"
+    },
     "source-audit": {
       "description": "Static repository and frontend↔backend contract audit before runtime checks.",
       "execution": "sequential",

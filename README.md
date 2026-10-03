@@ -1,4 +1,4 @@
-# KonnaxionDiag v4.2
+# KonnaxionDiag v4.2.4
 
 KonnaxionDiag consolide **LevelUpDiag** et **SecurityDiag** autour d’un moteur commun tout en gardant séparés les verdicts fonctionnels (`Nxx`), les campagnes de qualification sécurité (`Sxx`) et les invariants architecturaux (`SEC-xx`).
 
@@ -27,7 +27,11 @@ KonnaxionDiag
 
 **Qualifier n’est pas enforcer.** KonnaxionDiag produit une autorisation ou un refus signé. Le PEP réel — Capsule Manager / Konnaxion Agent / admission controller — doit exiger cette autorisation avant la transition protégée.
 
-`release-all` exécute les campagnes existantes sans renommer les taxonomies :
+`release-all` exécute les campagnes existantes sans renommer les taxonomies. Pour accélérer la qualification locale, `konnaxion.release_all_skip_playwright=true` conserve N05 mais marque les deux automatisations navigateur (smoke Playwright et probe FR/EN) en `SKIP`. Les campagnes dédiées comme `full-local` et `i18n-validation` continuent d’exécuter Playwright.
+
+Depuis v4.2.1, une cible VPS indisponible ne provoque plus de cascade qui annule les niveaux sécurité suivants. Les dépendances distantes concernées servent à ordonner la collecte; chaque niveau s’exécute et marque uniquement ses preuves distantes comme `BLOCKED`/`INFRA_ERROR`, tout en continuant ses contrôles locaux lorsqu’il en possède. Le gate de release reste fail-closed tant qu’une preuve distante obligatoire manque.
+
+Le pipeline de capture force aussi UTF-8 pour les processus Python, récupère les sorties Windows UTF-8/CP1252 et supprime les séquences ANSI afin d’éviter les caractères `�` et les codes couleur bruts dans le log.
 
 ```text
 N00..N11 -> S00..S04 -> S04W -> S05..S14

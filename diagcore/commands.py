@@ -3,7 +3,8 @@ import os, shlex, shutil, subprocess, threading, time
 from collections import deque
 from pathlib import Path
 from .models import StepResult
-from .utils import redact, tail_text
+from .subprocesses import hidden_process_kwargs, diagnostic_subprocess_env, decode_process_output
+from .utils import redact, tail_text, log_line
 from .verdicts import PASS,FAIL,INFRA_ERROR
 
 def find_executable(name): return shutil.which(name)
@@ -16,13 +17,14 @@ def normalize_command(command):
 def run_command(command,*,cwd:Path,timeout_seconds=120,capture_limit_kb=256,env=None,input_text=None):
     argv=normalize_command(command); started=time.monotonic()
     try:
-        cp=subprocess.run(argv,cwd=str(cwd),env=env,stdin=subprocess.PIPE if input_text is not None else subprocess.DEVNULL,input=input_text,
-            stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,encoding="utf-8",errors="replace",timeout=timeout_seconds,shell=False,check=False)
-        timed_out=False; code=cp.returncode; out=cp.stdout or ""; err=cp.stderr or ""
+        input_bytes=input_text.encode("utf-8") if isinstance(input_text,str) else input_text
+        cp=subprocess.run(argv,cwd=str(cwd),env=diagnostic_subprocess_env(env),stdin=subprocess.PIPE if input_text is not None else subprocess.DEVNULL,input=input_bytes,
+            stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=False,timeout=timeout_seconds,shell=False,check=False,
+            **hidden_process_kwargs())
+        timed_out=False; code=cp.returncode; out=decode_process_output(cp.stdout); err=decode_process_output(cp.stderr)
     except subprocess.TimeoutExpired as e:
         timed_out=True; code=None
-        out=e.stdout.decode("utf-8","replace") if isinstance(e.stdout,bytes) else (e.stdout or "")
-        err=e.stderr.decode("utf-8","replace") if isinstance(e.stderr,bytes) else (e.stderr or "")
+        out=decode_process_output(e.stdout); err=decode_process_output(e.stderr)
     limit=int(capture_limit_kb)*1024
     return {"argv":argv,"exit_code":code,"timed_out":timed_out,"duration_seconds":round(time.monotonic()-started,3),
             "stdout_tail":tail_text(redact(out),limit),"stderr_tail":tail_text(redact(err),limit)}
@@ -32,13 +34,14 @@ def run_cmd(command,*,cwd:Path,timeout:int,name:str='',env=None,tail_chars:int=1
     if not args: raise ValueError('empty command')
     started=time.monotonic(); lines=deque(); total=[0]; lock=threading.Lock()
     try:
-        proc=subprocess.Popen(args,cwd=str(cwd),env=env,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,
-                              text=True,encoding='utf-8',errors='replace',shell=False,bufsize=1)
+        proc=subprocess.Popen(args,cwd=str(cwd),env=diagnostic_subprocess_env(env),stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,
+                              text=False,shell=False,bufsize=0,**hidden_process_kwargs())
     except (OSError,PermissionError) as exc:
         return StepResult(name or args[0],tuple(args),str(cwd),INFRA_ERROR,None,round(time.monotonic()-started,3),'',f'{type(exc).__name__}: {exc}',False)
     def reader():
         assert proc.stdout is not None
-        for line in proc.stdout:
+        for raw_line in proc.stdout:
+            line=decode_process_output(raw_line)
             with lock:
                 lines.append(line); total[0]+=len(line)
                 while lines and total[0]>max(tail_chars*2,24000): total[0]-=len(lines.popleft())
@@ -53,7 +56,7 @@ def run_cmd(command,*,cwd:Path,timeout:int,name:str='',env=None,tail_chars:int=1
             except OSError:pass
             break
         if heartbeat>0 and time.monotonic()>=next_hb:
-            print(f"    … {name or args[0]} still running ({int(elapsed)}s)",flush=True); next_hb=time.monotonic()+heartbeat
+            log_line(f"    ... {name or args[0]} still running ({int(elapsed)}s)"); next_hb=time.monotonic()+heartbeat
         time.sleep(.1)
     try:proc.wait(timeout=5)
     except subprocess.TimeoutExpired:

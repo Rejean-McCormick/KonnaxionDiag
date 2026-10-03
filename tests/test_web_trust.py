@@ -47,3 +47,29 @@ def test_vulnerable_fixture_correlates_clickfix_chain():
         write(root,'frontend/lib/security/navigation.ts','')
         report=Report();_check_web_trust_boundaries({},report,root,{})
         assert report.verdict('app.web_trust.clickfix_delivery_chain')=='FAIL'
+
+
+def test_generated_playwright_artifacts_do_not_fail_browser_sink_scan():
+    with tempfile.TemporaryDirectory() as td:
+        root=Path(td)
+        write(root,'backend/config/settings/production.py','ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", default=False)\n')
+        write(root,'backend/config/settings/base.py','DEFAULT_THROTTLE_CLASSES = ()\nDEFAULT_THROTTLE_RATES = {}\n')
+        write(root,'backend/konnaxion/users/adapters.py','getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", False)\n')
+        write(root,'backend/konnaxion/security_controls.py','def validate_safe_upload(x): pass\n')
+        write(root,'backend/konnaxion/konnected/api_views.py','class KnowledgeResourceViewSet:\n permission_classes = [StaffWritePublicReadPermission]\n')
+        write(root,'backend/konnaxion/konnected/serializers.py','from x import validate_safe_external_url\ndef validate_url(self, value): return validate_safe_external_url(value)\n')
+        write(root,'backend/konnaxion/keenkonnect/api_views.py','OwnerOrStaffWritePermission\nProjectManagerWritePermission\nSelfOrStaffWritePermission\n')
+        write(root,'backend/konnaxion/keenkonnect/serializers.py','validate_safe_upload\n')
+        write(root,'backend/konnaxion/kreative/api_views.py','OwnerOrStaffWritePermission\nStaffWritePublicReadPermission\n')
+        write(root,'backend/konnaxion/kreative/serializers.py','validate_safe_upload\n')
+        write(root,'backend/konnaxion/trust/serializers.py','validate_safe_upload\n')
+        write(root,'backend/config/websocket.py','Origin\ndef _origin_is_allowed(): pass\n4403\n')
+        write(root,'backend/compose/production/nginx/default.conf',"add_header X-Content-Type-Options nosniff;\nadd_header Content-Security-Policy \"sandbox; script-src 'none'\";\nlocation ~* html|svg|xml|js { return 403; }\n")
+        write(root,'frontend/middleware.ts',"Content-Security-Policy\nnonce-${nonce}\nstrict-dynamic\nscript-src-attr 'none'\nobject-src 'none'\nframe-ancestors 'none'\n")
+        write(root,'frontend/lib/security/navigation.ts',"export function openExternalUrlSafely() { window.open('x', '_blank', 'noopener,noreferrer'); }\n")
+        write(root,'frontend/app/%5Fapi/search/route.ts','const base = process.env.INTERNAL_API_BASE;\n')
+        write(root,'frontend/artifacts/playwright-smoke-html/trace/assets/bundle.js','dangerouslySetInnerHTML={{__html:x}}; window.open(url);\n')
+        report=Report();_check_web_trust_boundaries({},report,root,{})
+        assert report.verdict('app.web_trust.browser_sinks')=='PASS'
+        finding=next(x for x in report.findings if x['id']=='app.web_trust.browser_sinks')
+        assert finding.get('evidence') == {'dangerously_set_inner_html': [], 'direct_window_open': []}

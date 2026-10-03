@@ -17,6 +17,20 @@ SENSITIVE_CONFIG_SUFFIXES=("_password","_secret","_secret_key","_api_key","_acce
 
 def utc_now(): return datetime.now(timezone.utc).isoformat()
 def local_now(): return datetime.now().astimezone().isoformat(timespec="seconds")
+def log_timestamp(): return datetime.now().astimezone().strftime("%H:%M")
+def display_time(value:str|None):
+    """Render an ISO timestamp as HH:MM for human-facing logs/summaries."""
+    if not value:
+        return "?"
+    try:
+        return datetime.fromisoformat(str(value).replace("Z","+00:00")).astimezone().strftime("%H:%M")
+    except (TypeError,ValueError):
+        text=str(value)
+        return text[11:16] if len(text)>=16 and text[10:11]=="T" else text
+def log_line(message:str="",*,file=None):
+    line=f"[{log_timestamp()}] {message}" if message else f"[{log_timestamp()}]"
+    if file is None: print(line,flush=True)
+    else: print(line,file=file,flush=True)
 def read_json(path:Path): return json.loads(path.read_text(encoding="utf-8-sig"))
 def write_json(path:Path,data):
     path.parent.mkdir(parents=True,exist_ok=True)

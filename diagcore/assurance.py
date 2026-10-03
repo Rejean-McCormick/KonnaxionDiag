@@ -6,6 +6,7 @@ from typing import Any,Iterable
 from .signing import canonical_bytes,verify_evidence
 from .utils import redact_data,read_json
 from . import VERSION
+from .subprocesses import hidden_process_kwargs, diagnostic_subprocess_env, decode_process_output
 
 CAPSULE_GATE_PURPOSE='konnaxiondiag-capsule-security-gate'
 RESTORE_DRILL_PURPOSE='konnaxiondiag-restore-drill'
@@ -19,9 +20,10 @@ def sha256_json(value:Any)->str:
 def _run_git(target:Path,*args:str)->str|None:
     if shutil.which('git') is None:return None
     try:
-        cp=subprocess.run(['git',*args],cwd=str(target),stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,
-                          text=True,encoding='utf-8',errors='replace',timeout=20,shell=False,check=False)
-        return cp.stdout.strip() if cp.returncode==0 else None
+        cp=subprocess.run(['git',*args],cwd=str(target),env=diagnostic_subprocess_env(),stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,
+                          text=False,timeout=20,shell=False,check=False,
+                          **hidden_process_kwargs())
+        return decode_process_output(cp.stdout).strip() if cp.returncode==0 else None
     except Exception:return None
 
 

@@ -1,12 +1,14 @@
 from __future__ import annotations
 import shutil, subprocess
 from pathlib import Path
+from diagcore.subprocesses import hidden_process_kwargs, diagnostic_subprocess_env, decode_process_output
 
 def _git(root,*args):
     try:
-        cp=subprocess.run(["git",*args],cwd=str(root),stdout=subprocess.PIPE,stderr=subprocess.PIPE,
-                          text=True,encoding="utf-8",errors="replace",timeout=20,check=False)
-        return cp.returncode,(cp.stdout or "").strip()
+        cp=subprocess.run(["git",*args],cwd=str(root),env=diagnostic_subprocess_env(),stdout=subprocess.PIPE,stderr=subprocess.PIPE,
+                          text=False,timeout=20,check=False,
+                          **hidden_process_kwargs())
+        return cp.returncode,decode_process_output(cp.stdout).strip()
     except Exception:
         return 99,""
 

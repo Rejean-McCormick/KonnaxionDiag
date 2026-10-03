@@ -5,10 +5,11 @@ from pathlib import Path
 from . import SUMMARY_SCHEMA,VERSION,REPORT_SCHEMA
 from .config import AppConfig,load_config
 from .manifest import load_manifest,resolve_selection
-from .utils import read_json,write_json,redact,redact_data,utc_now
+from .utils import read_json,write_json,redact,redact_data,utc_now,log_line,display_time
 from .verdicts import campaign_verdict,exit_code
 from .correlation import build_cross_domain
 from .release_gate import build_final_release_verdict
+from .subprocesses import hidden_process_kwargs, diagnostic_subprocess_env, decode_process_output
 
 DEFAULT_IGNORE=('frontend/next-env.d.ts',)
 DEFAULT_RESTORE=('frontend/storageState.json',)
@@ -24,9 +25,10 @@ def _git_status(target:Path,ignored=()):
         if r:ex.extend([f':(top,exclude){r}',f':(top,exclude){r}/**'])
     if ex:cmd+=['--','.',*ex]
     try:
-        cp=subprocess.run(cmd,cwd=str(target),stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,text=True,encoding='utf-8',errors='replace',timeout=15,shell=False,check=False)
+        cp=subprocess.run(cmd,cwd=str(target),env=diagnostic_subprocess_env(),stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,text=False,timeout=15,shell=False,check=False,**hidden_process_kwargs())
         if cp.returncode:return None
-        lines=sorted(x.rstrip() for x in cp.stdout.splitlines() if x.strip())
+        stdout=decode_process_output(cp.stdout)
+        lines=sorted(x.rstrip() for x in stdout.splitlines() if x.strip())
         return '\n'.join(lines)+'\n' if lines else ''
     except Exception:return None
 
@@ -58,15 +60,30 @@ def _blocked(meta,run_id,target,deps):
       'findings':[{'id':'dependencies.required.blocked','verdict':'BLOCKED','category':'dependency','message':'A required dependency did not produce usable evidence.','evidence':{'dependencies':deps}}],
       'artifacts':[],'metrics':{}}
 
+def _dependency_blockers(meta, deps):
+    """Return dependency verdicts that prevent this level from running.
+
+    ``order_only`` dependencies preserve execution order/evidence ordering but do
+    not suppress the level.  This is used for remote security levels so an
+    unavailable VPS cannot cascade into synthetic BLOCKED results for checks
+    that should still execute and report their own local/remote evidence.
+    """
+    policy=str(meta.get('dependency_policy','strict')).strip().lower()
+    if policy=='order_only':
+        return {}
+    nonblocking={str(x) for x in meta.get('nonblocking_depends_on',[]) if str(x)}
+    hard={'BLOCKED','ERROR','INFRA_ERROR','CONFIG_ERROR'} | ({'FAIL'} if meta.get('profile')=='levelup' else set())
+    return {d:v for d,v in deps.items() if d not in nonblocking and v in hard}
+
 def _print_findings(data,evidence_chars=700):
     for f in data.get('findings',[]):
         if f.get('verdict') in {'PASS','SKIP'}:continue
-        print(f"    {f.get('verdict')} {f.get('id')}: {f.get('message','')}",flush=True)
+        log_line(f"    {f.get('verdict')} {f.get('id')}: {f.get('message','')}")
         ev=f.get('evidence')
         if ev is not None:
             text=redact(str(ev)).replace('\r','')
-            if len(text)>evidence_chars:text='…'+text[-evidence_chars:]
-            for line in text.splitlines()[-8:]:print(f'      {line}',flush=True)
+            if len(text)>evidence_chars:text='...'+text[-evidence_chars:]
+            for line in text.splitlines()[-8:]:log_line(f'      {line}')
 
 def run_campaign(selection:str,*,levels=None,config:AppConfig|None=None,target_override=None,fail_fast=None):
     root=(config.diagnostics_root_path if config else Path(__file__).resolve().parents[1])
@@ -90,32 +107,38 @@ def run_campaign(selection:str,*,levels=None,config:AppConfig|None=None,target_o
     current.mkdir(parents=True,exist_ok=True)
     run_id=make_run_id();started=utc_now();write_json(current/'effective_config.json',redact_data(cfg.data))
     expected=[x['id'] for x in selected];expected_n=[x for x in expected if x.startswith('N')]
-    env=dict(os.environ);heartbeat=int(exec_cfg.get('command_heartbeat_seconds',15) or 0)
+    env=diagnostic_subprocess_env();heartbeat=int(exec_cfg.get('command_heartbeat_seconds',15) or 0)
     env.update({'KDIAG_UNIFIED':'1','KDIAG_CAMPAIGN':selection,'KDIAG_EXPECTED_LEVELS':','.join(expected),'KDIAG_RUN_ID':run_id,'KDIAG_HEARTBEAT_SECONDS':str(heartbeat),
                 'LEVELUPDIAG_CAMPAIGN':selection,'LEVELUPDIAG_EXPECTED_LEVELS':','.join(expected_n),'LEVELUPDIAG_RUN_ID':run_id,'LEVELUPDIAG_HEARTBEAT_SECONDS':str(heartbeat)})
     write_json(current/'run.json',{'schema':'konnaxiondiag.run.v1','run_id':run_id,'campaign':selection,'expected_levels':expected,'started_at':started,'target_repo_root':str(target)})
-    print(f'KonnaxionDiag v{VERSION} — {selection}',flush=True);print('Sequence: '+' -> '.join(expected),flush=True)
+    log_line(f'KonnaxionDiag v{VERSION} - {selection}');log_line('Sequence: '+' -> '.join(expected))
     results={};ff=bool(exec_cfg.get('fail_fast',False)) if fail_fast is None else bool(fail_fast)
     for index,meta in enumerate(selected,1):
         lid=meta['id'];deps={d:results[d].get('verdict') for d in meta.get('depends_on',[]) if d in results}
-        hard_dep={'BLOCKED','ERROR','INFRA_ERROR','CONFIG_ERROR'} | ({'FAIL'} if meta['profile']=='levelup' else set())
-        bad={d:v for d,v in deps.items() if v in hard_dep};out=current/'levels'/lid/'result.json';out.parent.mkdir(parents=True,exist_ok=True)
-        if bad:data=_blocked(meta,run_id,target,bad);write_json(out,data)
+        bad=_dependency_blockers(meta,deps)
+        out=current/'levels'/lid/'result.json';out.parent.mkdir(parents=True,exist_ok=True)
+        if bad:
+            data=_blocked(meta,run_id,target,bad);write_json(out,data)
+            log_line(f'[{index:02d}/{len(selected):02d}] {lid} {meta["name"]} - BLOCKED (dependency)')
+            _print_findings(data)
         elif ff and any(r.get('verdict') in {'FAIL','ERROR','CONFIG_ERROR'} for r in results.values()):
             data=_blocked(meta,run_id,target,{'fail_fast':'campaign stopped'});write_json(out,data)
+            log_line(f'[{index:02d}/{len(selected):02d}] {lid} {meta["name"]} - BLOCKED (fail-fast)')
+            _print_findings(data)
         else:
             timeout=int(meta.get('timeout_seconds') or exec_cfg.get('default_timeout_seconds',180))
-            print(f'[{index:02d}/{len(selected):02d}] {lid} {meta["name"]} — START',flush=True)
+            log_line(f'[{index:02d}/{len(selected):02d}] {lid} {meta["name"]} - START')
             cmd=[sys.executable,str(root/'kdiag.py'),'_worker','--level',lid,'--run-id',run_id,'--output',str(out),'--target',str(target)]
             t0=time.monotonic()
             try:
-                cp=subprocess.run(cmd,cwd=str(target),env=env,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,encoding='utf-8',errors='replace',timeout=timeout,shell=False,check=False)
+                cp=subprocess.run(cmd,cwd=str(target),env=env,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=False,timeout=timeout,shell=False,check=False,**hidden_process_kwargs())
                 if out.is_file():data=read_json(out)
                 else:
-                    now=utc_now();data={'schema':REPORT_SCHEMA,'standard':'KonnaxionDiag','standard_version':VERSION,'profile':meta['profile'],'run_id':run_id,'level_id':lid,'level_name':meta['name'],'target_repo_root':str(target),'started_at':now,'ended_at':now,'verdict':'INFRA_ERROR','findings':[{'id':'diagnostics.worker.missing_result','verdict':'INFRA_ERROR','category':'diagnostics','message':'Worker did not produce a result.','evidence':{'return_code':cp.returncode,'stderr_tail':redact((cp.stderr or '')[-2000:])}}],'artifacts':[],'metrics':{}};write_json(out,data)
+                    stderr_text=decode_process_output(cp.stderr)
+                    now=utc_now();data={'schema':REPORT_SCHEMA,'standard':'KonnaxionDiag','standard_version':VERSION,'profile':meta['profile'],'run_id':run_id,'level_id':lid,'level_name':meta['name'],'target_repo_root':str(target),'started_at':now,'ended_at':now,'verdict':'INFRA_ERROR','findings':[{'id':'diagnostics.worker.missing_result','verdict':'INFRA_ERROR','category':'diagnostics','message':'Worker did not produce a result.','evidence':{'return_code':cp.returncode,'stderr_tail':redact(stderr_text[-2000:])}}],'artifacts':[],'metrics':{}};write_json(out,data)
             except subprocess.TimeoutExpired:
                 now=utc_now();data={'schema':REPORT_SCHEMA,'standard':'KonnaxionDiag','standard_version':VERSION,'profile':meta['profile'],'run_id':run_id,'level_id':lid,'level_name':meta['name'],'target_repo_root':str(target),'started_at':now,'ended_at':now,'verdict':'INFRA_ERROR','findings':[{'id':'diagnostics.worker.timeout','verdict':'INFRA_ERROR','category':'diagnostics','message':f'Level exceeded {timeout}s timeout.'}],'artifacts':[],'metrics':{}};write_json(out,data)
-            print(f'[{index:02d}/{len(selected):02d}] {lid} — {data.get("verdict")} ({time.monotonic()-t0:.1f}s)',flush=True);_print_findings(data)
+            log_line(f'[{index:02d}/{len(selected):02d}] {lid} - {data.get("verdict")} ({time.monotonic()-t0:.1f}s)');_print_findings(data)
         results[lid]=data
     restored=_restore_paths(target,restore_state) if protect else []
     after=_git_status(target,(*ignore,*restore)) if protect else None;protection=None
@@ -134,7 +157,7 @@ def run_campaign(selection:str,*,levels=None,config:AppConfig|None=None,target_o
              'levels':[{'id':r['level_id'],'name':r.get('level_name',''),'profile':r.get('profile'),'verdict':r.get('verdict'),'result':f"levels/{r['level_id']}/result.json"} for r in ordered],
              'cross_domain_correlation':'correlation.json','final_release_verdict':'release-verdict.json' if final else None,'target_protection':protection}
     write_json(current/'summary.json',summary)
-    text=[f'KonnaxionDiag {selection} - {verdict}',f'Run: {run_id}',f'Target: {target}','']+[f"{r['level_id']:>4}  {r.get('verdict','ERROR'):<12} {r.get('level_name','')}" for r in ordered]
+    text=[f'KonnaxionDiag {selection} - {verdict}',f'Run: {run_id}',f'Target: {target}',f'Started: {display_time(started)}',f'Ended: {display_time(summary["ended_at"])}','']+[f"{r['level_id']:>4}  {r.get('verdict','ERROR'):<12} {r.get('level_name','')}  [{display_time(r.get('started_at'))} -> {display_time(r.get('ended_at'))}]" for r in ordered]
     (current/'summary.txt').write_text('\n'.join(text)+'\n',encoding='utf-8')
     return summary,exit_code(verdict),current
 
