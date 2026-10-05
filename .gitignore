@@ -1,0 +1,95 @@
+# ==============================================================================
+# KonnaxionDiag - local/generated artifacts
+# ==============================================================================
+
+# Local helper tooling
+/GitSink.bat
+/SmartSnap.pyw
+
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+*.pyd
+*.pyo
+.pytest_cache/
+.pytest-tmp/
+.mypy_cache/
+.ruff_cache/
+.pyright/
+.pyre/
+.tox/
+.nox/
+.cache/
+
+# Python environments / packaging
+.venv/
+venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# KonnaxionDiag runtime / generated evidence
+.konnaxiondiag/
+
+# Legacy diagnostic runtime trees
+.levelupdiag/
+.securitydiag/
+
+# Local configuration
+/kdiag.config.local.json
+
+# Local environments / secrets
+.env
+.env.*
+!.env.example
+!*.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.ppk
+id_rsa*
+id_ed25519*
+
+# Local attestations / operator state
+attestations/*.local.json
+attestations/*.local.json.sig
+
+# Logs / test output
+*.log
+logs/
+test-results/
+playwright-report/
+
+# Temporary / backup files
+*.tmp
+*.temp
+*.bak
+*.bak.*
+*.bak_*
+*.bak-*
+*.backup
+*.backup-*
+*.backup_*
+*.orig
+*.rej
+*.swp
+*.swo
+*~
+
+# IDE / OS metadata
+.idea/
+.vscode/
+.DS_Store
+.AppleDouble
+Thumbs.db
+Desktop.ini
