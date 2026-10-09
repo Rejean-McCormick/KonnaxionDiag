@@ -1,103 +1,32 @@
-# KonnaxionDiag v4.2.4
+# KonnaxionDiag
 
-KonnaxionDiag consolide **LevelUpDiag** et **SecurityDiag** autour d’un moteur commun tout en gardant séparés les verdicts fonctionnels (`Nxx`), les campagnes de qualification sécurité (`Sxx`) et les invariants architecturaux (`SEC-xx`).
+**Version:** `4.2.4` | **Scope:** Independent functional diagnostics, security qualification and exact release-admission evidence for Konnaxion.
 
-```text
-KonnaxionDiag
-├── diagcore/                  runner, worker isolation, config, evidence, correlation, release gate
-├── profiles/
-│   ├── levelup/               N00..N11
-│   └── security/              S00..S14 + S04W
-├── assurance/
-│   ├── release_set.py         ReleaseSet v1
-│   ├── attestation.py         universal signed attestations
-│   ├── pep.py                 fail-closed activation verifier
-│   ├── contracts/             assurance schemas
-│   └── verifiers/
-├── codex/                     SEC-01..SEC-53 mappings
-├── schemas/
-├── security_contracts.json    canonical SEC registry
-├── KonnaxionDiagLauncher.pyw
-├── kdiag.py
-├── kdiag_manifest.json
-└── kdiag.config.json
-```
+KonnaxionDiag combines the LevelUpDiag (`N00`–`N11`) and SecurityDiag (`S00`–`S14`, including `S04W`) campaigns under a common execution and evidence engine. Functional verdicts, security campaigns and the `SEC-01`–`SEC-53` architectural controls retain separate meanings.
 
-## Principe de sécurité
+## Security and admission boundary
 
-**Qualifier n’est pas enforcer.** KonnaxionDiag produit une autorisation ou un refus signé. Le PEP réel — Capsule Manager / Konnaxion Agent / admission controller — doit exiger cette autorisation avant la transition protégée.
-
-`release-all` exécute les campagnes existantes sans renommer les taxonomies. Pour accélérer la qualification locale, `konnaxion.release_all_skip_playwright=true` conserve N05 mais marque les deux automatisations navigateur (smoke Playwright et probe FR/EN) en `SKIP`. Les campagnes dédiées comme `full-local` et `i18n-validation` continuent d’exécuter Playwright.
-
-Depuis v4.2.1, une cible VPS indisponible ne provoque plus de cascade qui annule les niveaux sécurité suivants. Les dépendances distantes concernées servent à ordonner la collecte; chaque niveau s’exécute et marque uniquement ses preuves distantes comme `BLOCKED`/`INFRA_ERROR`, tout en continuant ses contrôles locaux lorsqu’il en possède. Le gate de release reste fail-closed tant qu’une preuve distante obligatoire manque.
-
-Le pipeline de capture force aussi UTF-8 pour les processus Python, récupère les sorties Windows UTF-8/CP1252 et supprime les séquences ANSI afin d’éviter les caractères `�` et les codes couleur bruts dans le log.
+**Qualification is not enforcement.** KonnaxionDiag may produce an independently signed qualification/denial, but the actual Policy Enforcement Point (PEP)—Capsule Manager, Konnaxion Agent or admission controller—must verify that decision before allowing a protected transition. A signed result is not a substitute for an enforcement integration.
 
 ```text
-N00..N11 -> S00..S04 -> S04W -> S05..S14
-                                  ↓
-                      SEC-01..SEC-53 evidence map
-                                  ↓
-                     exact ReleaseSet qualification
-                                  ↓
-                      signed ReleaseAuthorization
-                                  ↓
-                              PEP verify
+N00–N11 → S00–S04 → S04W → S05–S14
+                          ↓
+                  SEC-01–SEC-53 map
+                          ↓
+              Exact ReleaseSet qualification
+                          ↓
+              Signed ReleaseAuthorization
+                          ↓
+                     PEP verification
 ```
 
-## ReleaseSet v1
+## ReleaseSet and signed evidence
 
-La v4.2 remplace le `release_subject` générique par un vrai **ReleaseSet** explicite : source commit/tree, capsule, image digests, runtime pack, policy bundle, infra manifest, SBOM et provenance.
+ReleaseSet v1 binds the deployable subject to specific source commit/tree, capsule, image digests, runtime pack, policy bundle, infrastructure manifest, SBOM and provenance. The release set digest and the security evidence set digest are handled separately to avoid circular attestation. Mandatory missing components block the release.
 
-Le `release_set_digest` couvre l’objet déployable. Le `security_evidence_set_digest` est signé séparément dans le verdict afin d’éviter une circularité où une attestation devrait signer un digest contenant l’attestation elle-même.
+External evidence uses `konnaxiondiag.attestation.v1` with issuer, exact release subject, evidence type/digest, policy digest, timestamps/expiry, nonce, statement and detached Ed25519 signature. Strict acceptance of a security `WARN` requires an explicit, time-bounded, signed risk acceptance bound to the exact finding, ReleaseSet, policy and approver identities.
 
-Le profil livré est fail-closed : les composants ReleaseSet obligatoires absents bloquent la release.
-
-## Attestations universelles
-
-Les preuves externes utilisent `konnaxiondiag.attestation.v1` :
-
-```text
-issuer
-subject.release_set_digest
-evidence_type
-issued_at / expires_at
-policy_digest
-evidence_digest
-nonce
-statement
-signature Ed25519 détachée
-```
-
-Les `SEC-01..SEC-53` utilisent ce même modèle. Le trust peut être limité par contrat ou par authority group.
-
-## Risk acceptance
-
-Un WARN sécurité n’est acceptable sous le profil strict que via un objet `konnaxiondiag.risk-acceptance.v1` signé, expirant et lié à la fois :
-
-- au ReleaseSet exact;
-- au fingerprint exact du finding;
-- à la policy version;
-- aux identités demandeur/approbateur.
-
-## PEP admission
-
-KonnaxionDiag fournit maintenant le verifier que le PEP doit appeler :
-
-```powershell
-kdiag verify-admission `
-  release-verdict.json `
-  release-verdict.sig `
-  release-set.json `
-  --public-key C:\trust\kdiag-release.pub `
-  --policy-version konnaxion-security-policy-v1
-```
-
-Il n’existe aucun argument permettant au caller de désactiver l’admission.
-
-**Important :** le source du Konnaxion Agent n’est pas inclus dans cette archive. Le verifier est donc implémenté et testé côté KonnaxionDiag, mais l’intégration P0 dans `handle_instance_start()` doit être appliquée dans le repo Agent. Voir `docs/KX_AGENT_PEP_INTEGRATION.md`.
-
-## Commandes
+## Operational commands
 
 ```powershell
 python kdiag.py doctor
@@ -109,23 +38,12 @@ python kdiag.py verify-attestation evidence.json evidence.json.sig --release-set
 python kdiag.py verify-admission release-verdict.json release-verdict.sig release-set.json --public-key release-authority.pub
 ```
 
-## Evidence
+`release-all` retains established campaign taxonomies and sequencing. Optional `konnaxion.release_all_skip_playwright=true` marks selected N05 browser probes `SKIP`; it does not reclassify missing checks as `PASS`. Dedicated `full-local` and `i18n-validation` campaigns still run their browser checks. Unavailable VPS endpoints should block only dependent remote evidence and must not prevent otherwise viable local checks from running; missing required remote proof still fails release admission.
 
-`release-all` écrit notamment :
+## Integration status
 
-```text
-<Konnaxion>/.konnaxiondiag/current/
-├── levels/.../result.json
-├── correlation.json
-├── summary.json
-├── release-set.json
-├── release-verdict.json
-└── release-verdict.sig
-```
+The independent verifier exists on the diagnostic side. The Konnaxion Agent source was not included in the supplied diagnostic archive; integration into its `handle_instance_start()` PEP path still requires separate implementation and evidence. **Do not claim full enforcement from the presence of the verifier alone.**
 
-## Documentation
+Evidence typically resides under `.konnaxiondiag/current/`, including level results, correlation, `release-set.json`, `release-verdict.json` and `release-verdict.sig`.
 
-- `docs/SECURITY_ASSURANCE_V4_2.md` — architecture v4.2 complète.
-- `docs/KX_AGENT_PEP_INTEGRATION.md` — intégration non contournable côté Agent.
-- `security_contracts.json` — registre canonique SEC-01…SEC-53.
-- `assurance/registry.json` — contrats et taxonomies machine-readable.
+Refer to `docs/SECURITY_ASSURANCE_V4_2.md` and `docs/KX_AGENT_PEP_INTEGRATION.md` for architecture and the mandatory Agent integration.
