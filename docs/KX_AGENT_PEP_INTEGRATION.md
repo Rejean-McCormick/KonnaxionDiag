@@ -46,24 +46,39 @@ Unknown, missing, expired, unsigned or mismatched evidence must reject activatio
 
 ## Reference Python integration
 
+For production activation use **the strict PEP**. The Agent must measure the deployed ReleaseSet from its own trusted runtime inventory (artifact bytes, immutable image digests and effective policy). Do **not** obtain the measured digest from a request, the signed verdict, or an uploaded ReleaseSet JSON. The verifier cannot perform this measurement on behalf of the Agent.
+
 The Agent can call the library directly:
 
 ```python
-from assurance.pep import verify_release_authorization
+from assurance.pep import verify_activation_admission
 
-ok, detail = verify_release_authorization(
+# `measured_digest` must come from an independent Agent-owned measurement.
+# The following line is a conceptual placeholder, not a shipped API:
+# measured_digest = agent_deployment_inventory.measure_release_set_digest()
+ok, detail = verify_activation_admission(
     verdict,
     verdict_signature,
     trusted_public_keys=release_authority_keys,
     active_release_set=active_release_set,
-    allowed_verdicts=("PASS",),
+    measured_release_set_digest=measured_digest,
+
     expected_policy_version=EXPECTED_RELEASE_POLICY_VERSION,
 )
 if not ok:
     raise SecurityAdmissionDenied(detail)
 ```
 
-or execute `kdiag verify-admission` as a tightly controlled local verifier.
+or execute **`kdiag verify-activation`** as a tightly controlled local verifier. The legacy `verify-admission` is still provided for diagnosis and signature verification but does not independently bind the running deployment to the decision.
+
+```bash
+python kdiag.py verify-activation release-verdict.json release-verdict.sig release-set.json \
+  --public-key /etc/konnaxion/trust/kdiag-release.pub \
+  --policy-version konnaxion-security-policy-v1 \
+  --measured-digest sha256:<AGENT_MEASURED_FROM_DEPLOYED_ARTIFACTS>
+```
+
+This CLI returns `ADMIT` / `DENY` and exit codes `0` / `20`. `--measured-digest` is **not itself a measurement**; only the Agent decides how to measure deployed bytes. Do not copy the digest from the signed report to satisfy the flag.
 
 ## Regression tests required in the Agent repo
 
@@ -80,3 +95,7 @@ At minimum:
 ## Security-gate producer migration
 
 The Agent should also migrate its `security-gate.json` evidence to `konnaxiondiag.attestation.v1` and bind it to the exact `release_set_digest`. Until that producer is updated, KonnaxionDiag retains the signed v4.1 Capsule Security Gate verifier for compatibility; it should not be treated as the final long-term envelope.
+
+## Implementation status (Lot 1B, KonnaxionDiag 4.2.5)
+
+The strict verifier and CLI are implemented on the **KonnaxionDiag** side. Connecting the live Capsule Agent activation PEP and implementing the authoritative running-artifact measurement remain separate work in the Capsule Manager repository. No signature issuer private keys are included, and no remote Agent is updated by this change.

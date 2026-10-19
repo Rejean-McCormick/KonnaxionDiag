@@ -1,0 +1,46 @@
+{
+  "schema": "kdiag-lot1b-hash-manifest-v1",
+  "version": "4.2.5",
+  "files": {
+    "README.md": {
+      "before": "cc21eb50bd339ec8ba6a01a48dd4667b2c858cd8ca4d7bcb08b15620601a2f6f",
+      "after": "cafe7e69a7dde1fb75fb70d254114d20d9f6df66c07698a14e37589d12d72e8d"
+    },
+    "assurance/__init__.py": {
+      "before": "733dc6e8915fea550bea21ddd731f9aa32b68cc895e13f0b589f9bd62769fb11",
+      "after": "4fa40323b8f9c78b268f69d47af027ae29b382f5f36056cb2cc03135894ad8c9"
+    },
+    "assurance/pep.py": {
+      "before": "9b1e81f75e514fa72aedfa7a266f29c2fc35bbfe35a3f8ab521d10e6977bbed5",
+      "after": "9b0e5e74ff86d0bb44a17871744c9327551668d8be97657c978cc82cead694c5"
+    },
+    "diagcore/__init__.py": {
+      "before": "d4a6c922bc318bbb861c899899f172a4c4e0c4fdfa3de2c58310de7bd4b5d824",
+      "after": "8852542cc5541bfac4ec3f6ccdc91a816cd5ea20d72a465aff3e3eac2982f4ec"
+    },
+    "diagcore/cli.py": {
+      "before": "973706cb853c77d6e27e30544bbd6805460ebfab5af9dbd8b1e8e0eca62464e7",
+      "after": "9ba38d593fb5b6c3235c735ebda2347b0929048f0214e6881b396f27f5380130"
+    },
+    "docs/KX_AGENT_PEP_INTEGRATION.md": {
+      "before": "9dfd8cc8744da29b616ff0ff74c0f64b6e99d41983d9555e4ad495857c46662b",
+      "after": "1707e4d8e168e7697d950e34a1cca1cc7364417de717cecf3ea1288e44a8dfa2"
+    },
+    "docs/SECURITY_ASSURANCE_V4_2.md": {
+      "before": "fc9243647c041d6774184a050cce46d70ac7f14d51189b60687803524258e8fb",
+      "after": "8ebc8cc948e11ce4c7542c4b2722fad6a7174bc5f5b14d642f50745daedc3ff8"
+    },
+    "kdiag_manifest.json": {
+      "before": "f09a9a222a41abaf6e991f755247880ebed27cba100666647b91c48b78f6abba",
+      "after": "8cb7cd996128a3db39b79b68a16c2d199e548293fd9126ba01542f788ea9c7d7"
+    },
+    "pyproject.toml": {
+      "before": "50824685a72f000914f13b6d7fa5a2990387e2e122f0a4d85d8080207ec5c49a",
+      "after": "85d5e1f87eca207076b7d5cdd3bcb82d36be566ab045cca216a471ba7ec00cf8"
+    },
+    "tests/test_agent_activation_pep_v425.py": {
+      "before": null,
+      "after": "df03eb7cd8a6d7a17871eb87a3d6d642c264c800033c5a1be2f6ccf7ecea8cb3"
+    }
+  }
+}

@@ -2,7 +2,7 @@
 
 from .release_set import build_release_set, validate_release_set
 from .attestation import validate_universal_attestation, attestation_purpose
-from .pep import verify_release_authorization
+from .pep import verify_release_authorization, verify_activation_admission
 
 __all__ = [
     "build_release_set",
@@ -10,4 +10,5 @@ __all__ = [
     "validate_universal_attestation",
     "attestation_purpose",
     "verify_release_authorization",
+    "verify_activation_admission",
 ]

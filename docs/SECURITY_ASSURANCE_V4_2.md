@@ -174,3 +174,14 @@ kdiag verify-admission release-verdict.json release-verdict.sig release-set.json
 ## 11. Remaining external integration
 
 KonnaxionDiag now provides the exact contract the Agent PEP must enforce, but the Agent source is a separate component. See `KX_AGENT_PEP_INTEGRATION.md` for the required non-bypassable integration.
+
+## Lot 1B / KonnaxionDiag 4.2.5: strict activation verification
+
+In addition to the existing `verify-admission` diagnostic command, `verify-activation`
+requires an independently measured ReleaseSet digest, a mandatory trusted public key,
+and an explicit Agent-owned policy version. It denies incomplete production components,
+contradictory signed qualification fields, signature metadata mismatches and any
+active/signed/independently measured digest disagreement. It accepts **PASS only**.
+The supplied digest is not automatically measured by KonnaxionDiag; the running Agent
+must compute it from its own deployment inventory and implement the actual PEP guard.
+See `docs/KX_AGENT_PEP_INTEGRATION.md`.

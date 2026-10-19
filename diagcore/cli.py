@@ -10,7 +10,7 @@ from .utils import read_json,write_json,log_line
 from .signing import sign_evidence,verify_evidence
 from assurance.attestation import attestation_purpose, validate_universal_attestation
 from assurance.release_set import build_release_set
-from assurance.pep import verify_release_authorization
+from assurance.pep import verify_release_authorization, verify_activation_admission
 from .assurance import WARN_DISPOSITION_PURPOSE
 from .verdicts import exit_code
 
@@ -37,6 +37,11 @@ def parser():
     br.add_argument('--target');br.add_argument('--run-root');br.add_argument('--output')
     ad=sub.add_parser('verify-admission',help='PEP-side fail-closed verification of a signed release authorization')
     ad.add_argument('verdict');ad.add_argument('signature');ad.add_argument('release_set');ad.add_argument('--public-key',action='append',required=True);ad.add_argument('--allow-warn',action='store_true');ad.add_argument('--policy-version')
+    ac=sub.add_parser('verify-activation',help='Strict admission: trust Agent-measured release digest and mandatory release policy')
+    ac.add_argument('verdict');ac.add_argument('signature');ac.add_argument('release_set')
+    ac.add_argument('--public-key',action='append',required=True)
+    ac.add_argument('--measured-digest',required=True,help='MUST be measured independently by the Agent (not read from verdict)')
+    ac.add_argument('--policy-version',required=True,help='Agent-owned release security policy version')
     w=sub.add_parser('_worker');w.add_argument('--level',required=True);w.add_argument('--run-id',required=True);w.add_argument('--output',required=True);w.add_argument('--target')
     return p
 
@@ -126,6 +131,17 @@ def main(argv=None):
             allowed=('PASS','WARN') if args.allow_warn else ('PASS',)
             ok,detail=verify_release_authorization(verdict,env,trusted_public_keys=keys,active_release_set=rs,allowed_verdicts=allowed,expected_policy_version=args.policy_version)
             print('ADMIT' if ok else 'DENY');print(json.dumps(detail,indent=2,ensure_ascii=False));return 0 if ok else 20
+        if args.cmd=='verify-activation':
+            verdict=read_json(Path(args.verdict));env=read_json(Path(args.signature));rs=read_json(Path(args.release_set))
+            keys=[Path(x).expanduser() for x in args.public_key]
+            ok,detail=verify_activation_admission(
+                verdict,env,trusted_public_keys=keys,active_release_set=rs,
+                measured_release_set_digest=args.measured_digest,
+                expected_policy_version=args.policy_version,
+            )
+            print('ADMIT' if ok else 'DENY')
+            print(json.dumps(detail,indent=2,ensure_ascii=False))
+            return 0 if ok else 20
         if args.cmd=='_worker':return run_worker(root,args.level,args.run_id,Path(args.output),args.target)
     except (ConfigError,ManifestError,ValueError,OSError) as exc:
         log_line(f'KonnaxionDiag error: {type(exc).__name__}: {exc}',file=sys.stderr);return 30
