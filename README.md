@@ -1,5 +1,7 @@
 # KonnaxionDiag
 
+> **Branch 08 target-system alignment:** see [docs/BRANCH08_STRICT_RELEASE_VERIFICATION.md](docs/BRANCH08_STRICT_RELEASE_VERIFICATION.md) for verified local interoperability tests, explicit authority boundaries, and unresolved deployment gates. This note does not confer release or host permissions.
+
 **Version:** `4.2.5` | **Scope:** Independent functional diagnostics, security qualification and exact release-admission evidence for Konnaxion.
 
 KonnaxionDiag combines the LevelUpDiag (`N00`–`N11`) and SecurityDiag (`S00`–`S14`, including `S04W`) campaigns under a common execution and evidence engine. Functional verdicts, security campaigns and the `SEC-01`–`SEC-53` architectural controls retain separate meanings.

@@ -26,6 +26,13 @@ def verify_release_authorization(
     """
     now = now or datetime.now(timezone.utc)
     problems: list[str] = []
+    # A public verifier must return an explicit denial rather than raising on
+    # malformed caller documents. The Agent denies both, but direct consumers
+    # must never mistake an uncaught exception for a valid authorization.
+    if (not isinstance(verdict, dict) or not isinstance(signature, dict)
+            or not isinstance(active_release_set, dict)):
+        return False, {"problems": ["release authorization input is not a JSON object"],
+                       "active_release_set_digest": None, "matched_public_key": None}
 
     rs_ok, rs_detail = validate_release_set(active_release_set, require_complete=True)
     if not rs_ok:
